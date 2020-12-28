@@ -7,7 +7,12 @@ import { UsersModule } from './users/users.module';
 import { MoviesModule } from './movies/movies.module';
 
 @Module({
-  imports: [UsersModule, ConfigModule.forRoot(), TypeOrmModule.forRoot(), MoviesModule],
+  imports: [
+    UsersModule,
+    ConfigModule.forRoot(),
+    TypeOrmModule.forRoot(),
+    MoviesModule,
+  ],
   controllers: [],
   providers: [
     {

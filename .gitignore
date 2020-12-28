@@ -10,8 +10,6 @@ ormconfig.test.json
 src/migrations/**/*
 ormconfig.json
 
-src/movies
-
 # Logs
 logs
 *.log

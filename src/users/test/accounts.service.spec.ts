@@ -1,5 +1,5 @@
 import { NotFoundException } from '@nestjs/common';
-import { Test, TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { ROLES_PROVIDER } from '../../constants';
 import { Connection, Repository } from 'typeorm';
@@ -23,7 +23,7 @@ describe('UsersService', () => {
   let userRepository: MockRepository;
 
   beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+    const module = await Test.createTestingModule({
       providers: [
         AccountsService,
         { provide: Connection, useValue: {} },
@@ -150,6 +150,7 @@ describe('UsersService', () => {
           ...updatedUserData,
         };
 
+        userRepository.findOne.mockReturnValue(expectedData);
         userRepository.save.mockReturnValue(expectedData);
         const userUpdated = await service.update(id, updatedUserData);
 
@@ -158,19 +159,6 @@ describe('UsersService', () => {
     });
 
     describe('throw edit account', () => {
-      it('failed edit account', async () => {
-        const id = 1;
-
-        const updatedUserData: UpdateUserDto = {};
-
-        userRepository.save.mockReturnValue(undefined);
-        try {
-          await service.update(id, updatedUserData);
-        } catch (error) {
-          expect(error).toBeInstanceOf(TypeError);
-        }
-      });
-
       it(`profile doesn't exit`, async () => {
         const id = 1;
         const updateUserDto: UpdateUserDto = {};
@@ -187,21 +175,13 @@ describe('UsersService', () => {
     describe('removed sucess user', () => {
       it('removed client', async () => {
         const id = 1;
+        userRepository.findOne.mockReturnValue({});
         const deletedUser = await service.remove(id);
         expect(deletedUser).toBeTruthy();
       });
     });
 
     describe('throw removed user', () => {
-      it('throw removing client', async () => {
-        const id = 1;
-        try {
-          await service.remove(id);
-        } catch (error) {
-          expect(error).toBeInstanceOf(TypeError);
-        }
-      });
-
       it(`userid doesn't exist`, async () => {
         const id = 1;
         try {

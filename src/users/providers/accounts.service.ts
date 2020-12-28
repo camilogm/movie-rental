@@ -37,6 +37,7 @@ export class AccountsService {
 
     return user;
   }
+
   async findOneByUserName(userName: string) {
     const user = await this.userRepository.findOne({
       where: { userName },
@@ -49,9 +50,7 @@ export class AccountsService {
   }
 
   async update(id: number, updateUserDto: UpdateUserDto) {
-    const user = await this.userRepository.findOne(id, {
-      relations: ['role'],
-    });
+    const user = await this.findOneById(id);
 
     const password = updateUserDto.password
       ? await bcrypt.hash(updateUserDto.password, 10)
@@ -63,12 +62,11 @@ export class AccountsService {
       password,
     });
     const updatedUser = await this.userRepository.save(updatedUserData);
-
     if (updatedUser) return updatedUser;
   }
 
   async remove(id: number) {
-    const user = await this.userRepository.findOne(id);
+    const user = await this.findOneById(id);
 
     await this.userRepository.remove(user);
 
