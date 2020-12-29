@@ -7,6 +7,7 @@ export class TagEntity {
 
   @Column({
     length: 30,
+    unique: true,
   })
   name: string;
 }

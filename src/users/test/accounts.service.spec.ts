@@ -5,7 +5,7 @@ import { ROLES_PROVIDER } from '../../constants';
 import { Connection, Repository } from 'typeorm';
 import { CreateUserDto } from '../dto/user-dtos/create-user.dto';
 import { UpdateUserDto } from '../dto/user-dtos/update-user.dto';
-import { Role } from '../entities/role.entity';
+import { RoleEntity } from '../entities/role.entity';
 import { UserEntity } from '../entities/user.entity';
 import { AccountsService } from '../providers/accounts.service';
 
@@ -31,7 +31,10 @@ describe('UsersService', () => {
           provide: getRepositoryToken(UserEntity),
           useValue: createMockRepository(),
         },
-        { provide: getRepositoryToken(Role), useValue: createMockRepository() },
+        {
+          provide: getRepositoryToken(RoleEntity),
+          useValue: createMockRepository(),
+        },
         { provide: ROLES_PROVIDER, useValue: [0, 1] },
       ],
     }).compile();
@@ -99,7 +102,7 @@ describe('UsersService', () => {
         const expectedResult: UserEntity = {
           id: 1,
           ...user,
-          role: new Role(3, 'CLIENT'),
+          role: new RoleEntity(3, 'CLIENT'),
         };
 
         userRepository.save.mockReturnValue(expectedResult);
@@ -138,7 +141,7 @@ describe('UsersService', () => {
           userName: 'gmcamiloe',
           firstName: 'Camilo',
           lastName: 'Gonzalez',
-          role: new Role(3, 'CLIENT'),
+          role: new RoleEntity(3, 'CLIENT'),
         };
 
         const updatedUserData: UpdateUserDto = {

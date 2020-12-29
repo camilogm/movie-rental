@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  InternalServerErrorException,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateMovieDto } from '../dto/movies-dto/create-movie.dto';
@@ -50,12 +46,15 @@ export class MoviesService {
   async update(id: number, updateMovieDto: UpdateMovieDto) {
     const movie = await this.findOneById(id);
 
-    const updatedMovieData = {
+    const updatedMovieData: MovieEntity = {
       ...movie,
       ...updateMovieDto,
     };
 
-    const updatedMovie = await this.moviesRepository.save(updatedMovieData);
+    const updatedMovie = await this.moviesRepository.save({
+      ...updatedMovieData,
+      availability: !!updatedMovieData.stock,
+    });
 
     if (updatedMovieData) return updatedMovie;
   }
@@ -76,5 +75,11 @@ export class MoviesService {
     await this.moviesRepository.save(movie);
 
     return true;
+  }
+
+  async getMovieTags(idMovie: number) {
+    const movie = await this.findOneById(idMovie);
+
+    return movie.tags;
   }
 }

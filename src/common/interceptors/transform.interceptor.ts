@@ -14,8 +14,7 @@ export class TransformInterceptor implements NestInterceptor {
       map((data) => ({
         statusCode: context.switchToHttp().getResponse().statusCode,
         type: context.getClass().name.toLowerCase().replace('controller', ''),
-        result: data,
-        meta: {},
+        data,
       })),
     );
   }

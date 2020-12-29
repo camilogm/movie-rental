@@ -1,6 +1,13 @@
 import { Exclude, Expose, Transform } from 'class-transformer';
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
-import { Role } from './role.entity';
+import { TokenEntity } from 'src/auth/entities/token.entity';
+import {
+  Column,
+  Entity,
+  ManyToOne,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import { RoleEntity } from './role.entity';
 
 @Entity('users')
 export class UserEntity {
@@ -25,7 +32,12 @@ export class UserEntity {
   password: string;
 
   @Expose({ name: 'role' })
-  @Transform((role: Role) => role.name)
-  @ManyToOne(() => Role, (role) => role.users)
-  role: Role;
+  @Transform((role: RoleEntity) => role.name)
+  @ManyToOne(() => RoleEntity, (role) => role.users)
+  role: RoleEntity;
+
+  @OneToMany(() => TokenEntity, (token) => token.user, {
+    onDelete: 'CASCADE',
+  })
+  tokens: TokenEntity[];
 }

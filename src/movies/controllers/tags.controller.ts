@@ -8,11 +8,17 @@ import {
   Patch,
   Post,
 } from '@nestjs/common';
+import {
+  AllowedRoles,
+  ROLE_ADMIN,
+  ROLE_SUPER_ADMIN,
+} from 'src/common/decorators/authorization.decorator';
 import { CreateTagDTO } from '../dto/tags-dto/create-tag.dto';
 import { UpdateTagDTO } from '../dto/tags-dto/update-tag.dto';
 import { TagsService } from '../providers/tags.service';
 
 @Controller('tags')
+@AllowedRoles(ROLE_SUPER_ADMIN, ROLE_ADMIN)
 export class TagsController {
   constructor(private readonly tagsService: TagsService) {}
 

@@ -1,7 +1,7 @@
-import { Role } from '../entities/role.entity';
+import { RoleEntity } from '../entities/role.entity';
 
 export class RolesDTO {
-  readonly SUPERADMIN: Role;
-  readonly ADMIN: Role;
-  readonly CLIENT: Role;
+  readonly SUPERADMIN: RoleEntity;
+  readonly ADMIN: RoleEntity;
+  readonly CLIENT: RoleEntity;
 }

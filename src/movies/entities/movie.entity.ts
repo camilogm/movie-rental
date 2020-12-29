@@ -1,3 +1,4 @@
+import { Exclude } from 'class-transformer';
 import {
   Column,
   Entity,
@@ -44,5 +45,6 @@ export class MovieEntity {
     onDelete: 'CASCADE',
   })
   @JoinTable()
+  @Exclude()
   tags?: TagEntity[];
 }

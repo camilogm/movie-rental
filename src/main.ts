@@ -1,7 +1,10 @@
 import { ClassSerializerInterceptor, ValidationPipe } from '@nestjs/common';
 import { NestFactory, Reflector } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { TransformInterceptor } from './global/interceptors/transform.interceptor';
+import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
+import { OwnProfileChangesGuard } from './auth/guards/own-profile-changes.guard';
+import { RolesGuard } from './auth/guards/roles.guard';
+import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -16,6 +19,7 @@ async function bootstrap() {
   );
 
   const reflector = app.get(Reflector);
+
   app.useGlobalInterceptors(new TransformInterceptor());
   app.useGlobalInterceptors(new ClassSerializerInterceptor(reflector));
 
