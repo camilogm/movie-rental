@@ -1,8 +1,13 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { AccountsService } from 'src/users/providers/accounts.service';
-import { LoginDTO } from './dto/login.dto';
 import * as bcrypt from 'bcrypt';
+import { AccountsService } from '../users/providers/accounts.service';
+import { LoginDTO } from './dto/login.dto';
 import { classToPlain, plainToClass } from 'class-transformer';
 import { PayloadDTO } from './dto/payload.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -24,11 +29,15 @@ export class AuthService {
       const { username, password } = loginDTO;
       const user = await this.accountsService.findOneByUserName(username);
 
-      const matchUser = await bcrypt.compare(password, user?.password);
-      if (matchUser) {
-        return user;
-      }
-    } catch (error) {}
+      const matchUser = await bcrypt.compare(password, user.password);
+
+      if (matchUser) return user;
+    } catch (error) {
+      if (!(error instanceof NotFoundException))
+        throw new InternalServerErrorException('Try later');
+
+      console.log(error);
+    }
 
     throw new UnauthorizedException();
   }

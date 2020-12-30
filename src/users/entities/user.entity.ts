@@ -40,7 +40,7 @@ export class UserEntity {
   @OneToMany(() => TokenEntity, (token) => token.user, {
     onDelete: 'CASCADE',
   })
-  tokens: TokenEntity[];
+  tokens?: TokenEntity[];
 
   @OneToMany(() => RentBuyEntity, (rentBuy) => rentBuy.user, {
     onDelete: 'SET NULL',

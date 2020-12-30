@@ -8,18 +8,18 @@ import { TagsController } from './controllers/tags.controller';
 import { TagsService } from './providers/tags.service';
 import { MovieSuscriber } from './suscribers/movie.suscriber';
 import { MoviesStatesProviders } from './providers/movies-state.provider';
-import { ClientOperationsController } from './controllers/client-operations.controller';
-import { ClientOperationsService } from './providers/client-operations.service';
-import { UsersModule } from 'src/users/users.module';
+import { RentBuyController } from './controllers/rent-buy.controller';
+import { RentBuyService } from './providers/rent-buy.service';
+import { UsersModule } from '../users/users.module';
 import { RentBuyEntity } from './entities/rent-buy.entity';
 
 @Module({
-  controllers: [MoviesController, TagsController, ClientOperationsController],
+  controllers: [MoviesController, TagsController, RentBuyController],
   providers: [
     MoviesService,
     TagsService,
     MoviesStatesProviders,
-    ClientOperationsService,
+    RentBuyService,
   ],
   imports: [
     UsersModule,

@@ -15,6 +15,8 @@ import { TagEntity } from '../../entities/tag.entity';
 describe('MoviesService', () => {
   let moviesService: MoviesService;
   let moviesRepository: MockRepository;
+
+  //this is defined becouse at the end , the findOneById function is used
   let tagsService: TagsService;
   let tagsRepository: MockRepository;
 
@@ -22,7 +24,10 @@ describe('MoviesService', () => {
     const module = await Test.createTestingModule({
       providers: [
         MoviesService,
-        TagsService,
+        {
+          provide: TagsService,
+          useValue: { findOneById: jest.fn() },
+        },
         {
           provide: getRepositoryToken(MovieEntity),
           useValue: createMockRepository(),

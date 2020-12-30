@@ -17,7 +17,7 @@ import {
   AllowedRoles,
   ROLE_ADMIN,
   ROLE_SUPER_ADMIN,
-} from 'src/common/decorators/authorization.decorator';
+} from '../../common/decorators/authorization.decorator';
 
 @Controller('movies')
 @AllowedRoles(ROLE_SUPER_ADMIN, ROLE_ADMIN)

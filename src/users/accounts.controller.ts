@@ -17,7 +17,7 @@ import {
   Public,
   ROLE_ADMIN,
   ROLE_CLIENT,
-} from 'src/common/decorators/authorization.decorator';
+} from '../common/decorators/authorization.decorator';
 import { PayloadDTO } from '../auth/dto/payload.dto';
 
 @Controller('accounts')

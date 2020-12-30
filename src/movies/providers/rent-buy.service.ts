@@ -1,16 +1,16 @@
 import { ConflictException, Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { AccountsService } from 'src/users/providers/accounts.service';
+import { AccountsService } from '../../users/providers/accounts.service';
 import { Repository } from 'typeorm';
-import { CreateOperationDTO } from '../dto/movies-dto/create-operation.dto';
+import { CreateRentBuy } from '../dto/movies-dto/create-rent-buy.dto';
 import { RentBuyEntity } from '../entities/rent-buy.entity';
 import { MoviesService } from './movies.service';
 import * as moment from 'moment';
-import { BUY_OPERATION, STATES_MOVIES_PROVIDER } from 'src/constants';
+import { BUY_OPERATION, STATES_MOVIES_PROVIDER } from '../../constants';
 import { StateMoviesDTO } from '../dto/movies-dto/state-movies.dto';
 
 @Injectable()
-export class ClientOperationsService {
+export class RentBuyService {
   constructor(
     private readonly userService: AccountsService,
     private readonly moviesService: MoviesService,
@@ -56,7 +56,7 @@ export class ClientOperationsService {
 
   async operation(
     clientId: number,
-    rentMovieDTO: CreateOperationDTO,
+    rentMovieDTO: CreateRentBuy,
     typeOperation: string,
   ) {
     const user = await this.userService.findOneById(clientId);
@@ -93,10 +93,10 @@ export class ClientOperationsService {
     return await this.rentBuyRepository.save(rentBuyMovieData);
   }
 
-  async returnOrBuyMovieRented(userId: number, typeOperation: string) {
-    const movieRented = await this.getMovieRentedByClientId(userId);
+  async returnOrBuyMovieRented(clientId: number, typeOperation: string) {
+    const movieRented = await this.getMovieRentedByClientId(clientId);
 
-    if (!movieRented)
+    if (!movieRented || !movieRented?.movie)
       throw new ConflictException(`Client doesn't have a movie rented`);
 
     movieRented.state =
