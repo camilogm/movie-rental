@@ -1,5 +1,5 @@
 import { getConnectionToken } from '@nestjs/typeorm';
-import { STATES_MOVIES_PROVIDER } from 'src/constants';
+import { STATES_MOVIES_PROVIDER } from '../../constants';
 import { Connection } from 'typeorm';
 import { StateMovieEntity } from '../entities/state-movie.entity';
 

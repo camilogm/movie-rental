@@ -7,10 +7,10 @@ import {
   Post,
   Req,
 } from '@nestjs/common';
-import { Public } from 'src/common/decorators/authorization.decorator';
 import { AuthService } from './auth.service';
 import { LoginDTO } from './dto/login.dto';
 import { Request } from 'express';
+import { Public } from '../common/decorators/authorization.decorator';
 
 @Controller('')
 export class AuthController {

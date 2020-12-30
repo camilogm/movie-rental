@@ -35,8 +35,6 @@ export class AuthService {
     } catch (error) {
       if (!(error instanceof NotFoundException))
         throw new InternalServerErrorException('Try later');
-
-      console.log(error);
     }
 
     throw new UnauthorizedException();

@@ -7,12 +7,16 @@ import {
   Post,
   Req,
 } from '@nestjs/common';
-import { PayloadDTO } from 'src/auth/dto/payload.dto';
+import { PayloadDTO } from '../../auth/dto/payload.dto';
 import {
   AllowedRoles,
   ROLE_CLIENT,
-} from 'src/common/decorators/authorization.decorator';
-import { BUY_OPERATION, RENT_OPERATION, RETURN_OPERATION } from 'src/constants';
+} from '../../common/decorators/authorization.decorator';
+import {
+  BUY_OPERATION,
+  RENT_OPERATION,
+  RETURN_OPERATION,
+} from '../../constants';
 import { CreateRentBuy } from '../dto/movies-dto/create-rent-buy.dto';
 import { RentBuyService } from '../providers/rent-buy.service';
 

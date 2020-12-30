@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Observable } from 'rxjs';
-import { OWN_PROFILE_CHAGNES } from 'src/common/decorators/authorization.decorator';
+import { OWN_PROFILE_CHAGNES } from '../../common/decorators/authorization.decorator';
 import { LoginDTO } from '../dto/login.dto';
 import { PayloadDTO } from '../dto/payload.dto';
 

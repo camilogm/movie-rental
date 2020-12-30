@@ -12,7 +12,7 @@ import {
   AllowedRoles,
   ROLE_ADMIN,
   ROLE_SUPER_ADMIN,
-} from 'src/common/decorators/authorization.decorator';
+} from '../../common/decorators/authorization.decorator';
 import { CreateTagDTO } from '../dto/tags-dto/create-tag.dto';
 import { UpdateTagDTO } from '../dto/tags-dto/update-tag.dto';
 import { TagsService } from '../providers/tags.service';
