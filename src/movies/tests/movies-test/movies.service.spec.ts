@@ -169,7 +169,10 @@ describe('MoviesService', () => {
 
         moviesRepository.findOne.mockReturnValue(expectedMovie);
         moviesRepository.save.mockReturnValue(expectedMovie);
-        const updatedMovie = await moviesService.update(movieId, updateData);
+        const updatedMovie = await moviesService.updateById(
+          movieId,
+          updateData,
+        );
         expect(updatedMovie).toEqual(expectedMovie);
       });
     });
@@ -181,7 +184,7 @@ describe('MoviesService', () => {
         moviesRepository.save.mockReturnValue(undefined);
 
         try {
-          await moviesService.update(movieId, updateDTO);
+          await moviesService.updateById(movieId, updateDTO);
         } catch (error) {
           expect(error).toBeInstanceOf(NotFoundException);
         }

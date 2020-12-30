@@ -5,7 +5,10 @@ import {
   Injectable,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { ALL_ROLES, USER_ROLES } from 'src/common/decorators/authorization.decorator';
+import {
+  ALL_ROLES,
+  USER_ROLES,
+} from 'src/common/decorators/authorization.decorator';
 import { Connection } from 'typeorm';
 import { PayloadDTO } from '../dto/payload.dto';
 import { TokenEntity } from '../entities/token.entity';

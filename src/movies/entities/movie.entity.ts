@@ -4,9 +4,11 @@ import {
   Entity,
   JoinTable,
   ManyToMany,
+  OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { UserEntity } from '../../users/entities/user.entity';
+import { RentBuyEntity } from './rent-buy.entity';
 import { TagEntity } from './tag.entity';
 
 @Entity('movies')
@@ -36,7 +38,7 @@ export class MovieEntity {
   availability: boolean;
 
   @ManyToMany(() => UserEntity, {
-    onDelete: 'CASCADE',
+    onDelete: 'SET NULL',
   })
   @JoinTable()
   likes?: UserEntity[];
@@ -47,4 +49,9 @@ export class MovieEntity {
   @JoinTable()
   @Exclude()
   tags?: TagEntity[];
+
+  @OneToMany(() => RentBuyEntity, (rentBuy) => rentBuy.movie, {
+    onDelete: 'SET NULL',
+  })
+  rentBuy?: RentBuyEntity[];
 }

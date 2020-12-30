@@ -27,5 +27,13 @@ export class TypeOrmExceptionsFilter<T extends QueryFailedError>
         message: badRequest.message,
       });
     }
+
+    console.log(typeOrmException);
+
+    response.status(500).json({
+      statusCode: 500,
+      path: request.url,
+      message: 'Internal Error',
+    });
   }
 }

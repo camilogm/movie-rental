@@ -17,7 +17,6 @@ export class MoviesService {
   async create(createMovieDto: CreateMovieDto) {
     const movie = this.moviesRepository.create({
       ...createMovieDto,
-      availability: !!createMovieDto.stock,
     });
 
     const savedMovie = await this.moviesRepository.save(movie);
@@ -28,6 +27,8 @@ export class MoviesService {
   async findSortedAlphabetic() {
     const movies = await this.moviesRepository.find({
       order: { title: 'ASC' },
+      where: { availability: true },
+      select: ['id', 'title', 'poster', 'salePrice'],
     });
 
     return movies;
@@ -43,7 +44,7 @@ export class MoviesService {
     return movie;
   }
 
-  async update(id: number, updateMovieDto: UpdateMovieDto) {
+  async updateById(id: number, updateMovieDto: UpdateMovieDto) {
     const movie = await this.findOneById(id);
 
     const updatedMovieData: MovieEntity = {
@@ -53,10 +54,18 @@ export class MoviesService {
 
     const updatedMovie = await this.moviesRepository.save({
       ...updatedMovieData,
-      availability: !!updatedMovieData.stock,
     });
 
     if (updatedMovieData) return updatedMovie;
+  }
+
+  async updateByEntity(movie: MovieEntity, updateMovieDto: UpdateMovieDto) {
+    const updatedMovie: MovieEntity = await this.moviesRepository.save({
+      ...movie,
+      ...updateMovieDto,
+    });
+
+    return updatedMovie;
   }
 
   async remove(id: number) {

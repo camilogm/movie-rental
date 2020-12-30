@@ -1,5 +1,6 @@
 import { Exclude, Expose, Transform } from 'class-transformer';
-import { TokenEntity } from 'src/auth/entities/token.entity';
+import { TokenEntity } from '../../auth/entities/token.entity';
+import { RentBuyEntity } from '../../movies/entities/rent-buy.entity';
 import {
   Column,
   Entity,
@@ -40,4 +41,9 @@ export class UserEntity {
     onDelete: 'CASCADE',
   })
   tokens: TokenEntity[];
+
+  @OneToMany(() => RentBuyEntity, (rentBuy) => rentBuy.user, {
+    onDelete: 'SET NULL',
+  })
+  rentBuy?: RentBuyEntity[];
 }
