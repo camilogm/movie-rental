@@ -113,4 +113,14 @@ describe('Auth Service', () => {
       });
     });
   });
+
+  describe('logout', () => {
+    it('success', async () => {
+      const token = '';
+
+      tokenMockRepository.findOne.mockReturnValue({});
+      const data = await authService.logout(token);
+      expect(data).toBeTruthy();
+    });
+  });
 });

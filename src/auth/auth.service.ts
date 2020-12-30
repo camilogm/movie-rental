@@ -62,4 +62,13 @@ export class AuthService {
       jwt,
     };
   }
+
+  async logout(token: string) {
+    const tokenEntity = await this.tokenRepository.findOne({
+      where: { token },
+    });
+
+    await this.tokenRepository.remove(tokenEntity);
+    return true;
+  }
 }
