@@ -1,6 +1,6 @@
 import { UserEntity } from '../../users/entities/user.entity';
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
-import { MovieEntity } from './movie.entity';
+import { MovieEntity } from '../../movies/entities/movie.entity';
 import { StateMovieEntity } from './state-movie.entity';
 import { Transform } from 'class-transformer';
 

@@ -1,23 +1,23 @@
 import { NotFoundException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { TagsService } from '../../providers/tags.service';
+import { TagsService } from '../providers/tags.service';
 import {
   createMockRepository,
   MockRepository,
-} from '../../../../test/TypeORM.mock';
-import { CreateMovieDto } from '../../dto/movies-dto/create-movie.dto';
-import { UpdateMovieDto } from '../../dto/movies-dto/update-movie.dto';
-import { MovieEntity } from '../../entities/movie.entity';
-import { MoviesService } from '../../providers/movies.service';
-import { TagEntity } from '../../entities/tag.entity';
+} from '../../../test/TypeORM.mock';
+import { CreateMovieDto } from '../dto/movies-dto/create-movie.dto';
+import { UpdateMovieDto } from '../dto/movies-dto/update-movie.dto';
+import { MovieEntity } from '../entities/movie.entity';
+import { MoviesService } from '../providers/movies.service';
+import { TagEntity } from '../entities/tag.entity';
+import { MoviesController } from '../controllers/movies.controller';
 
 describe('MoviesService', () => {
-  let moviesService: MoviesService;
   let moviesRepository: MockRepository;
+  let moviesController: MoviesController;
 
   //this is defined becouse at the end , the findOneById function is used
-  let tagsService: TagsService;
   let tagsRepository: MockRepository;
 
   beforeEach(async () => {
@@ -37,40 +37,39 @@ describe('MoviesService', () => {
           useValue: createMockRepository(),
         },
       ],
+      controllers: [MoviesController],
     }).compile();
 
-    moviesService = module.get<MoviesService>(MoviesService);
+    moviesController = module.get<MoviesController>(MoviesController);
     tagsRepository = module.get<MockRepository>(getRepositoryToken(TagEntity));
-    tagsService = module.get<TagsService>(TagsService);
     moviesRepository = module.get<MockRepository>(
       getRepositoryToken(MovieEntity),
     );
   });
 
   it('should be defined', () => {
-    expect(moviesService).toBeDefined();
     expect(moviesRepository).toBeDefined();
-    expect(tagsService).toBeDefined();
     expect(tagsRepository).toBeDefined();
+    expect(moviesController).toBeDefined();
   });
 
   describe('find One movie', () => {
     describe('success find', () => {
       it('found by id', async () => {
-        const id = 1;
+        const id = '1';
         const expectedMovie = {};
         moviesRepository.findOne.mockReturnValue(expectedMovie);
-        const movie = await moviesService.findOneById(id);
+        const movie = await moviesController.findOne(id);
         expect(movie).toEqual(expectedMovie);
       });
     });
 
     describe('failed find one', () => {
       it('throw find', async () => {
-        const id = 1;
+        const id = '1';
         moviesRepository.findOne.mockReturnValue(undefined);
         try {
-          await moviesService.findOneById(id);
+          await moviesController.findOne(id);
         } catch (error) {
           expect(error).toBeInstanceOf(NotFoundException);
         }
@@ -83,7 +82,7 @@ describe('MoviesService', () => {
       it('should be an array', async () => {
         const expectedMovies = [];
         moviesRepository.find.mockReturnValue(expectedMovies);
-        const movies = await moviesService.findSortedAlphabetic();
+        const movies = await moviesController.findSortedMovies();
         expect(movies).toBe(expectedMovies);
       });
     });
@@ -92,7 +91,7 @@ describe('MoviesService', () => {
       it('failed find many', async () => {
         moviesRepository.find.mockReturnValue(undefined);
         try {
-          await moviesService.findSortedAlphabetic();
+          await moviesController.findSortedMovies();
         } catch (error) {
           expect(error).toBeInstanceOf(TypeError);
         }
@@ -120,7 +119,7 @@ describe('MoviesService', () => {
         };
 
         moviesRepository.save.mockReturnValue(expectedMovie);
-        const movie = await moviesService.create(mockCreateDTO);
+        const movie = await moviesController.create(mockCreateDTO);
         expect(movie).toEqual(expectedMovie);
       });
     });
@@ -138,7 +137,7 @@ describe('MoviesService', () => {
         };
 
         try {
-          await moviesService.create(mockCreateDTO);
+          await moviesController.create(mockCreateDTO);
         } catch (error) {
           expect(error).toBeInstanceOf(TypeError);
         }
@@ -149,7 +148,7 @@ describe('MoviesService', () => {
   describe('update a movie', () => {
     describe('success update', () => {
       it('by id', async () => {
-        const movieId = 1;
+        const movieId = '1';
 
         const mockCreateDTO: CreateMovieDto = {
           title: 'Avatar',
@@ -166,7 +165,7 @@ describe('MoviesService', () => {
         };
 
         const expectedMovie: MovieEntity = {
-          id: movieId,
+          id: +movieId,
           ...mockCreateDTO,
           ...updateData,
           availability: !!mockCreateDTO.stock,
@@ -174,22 +173,19 @@ describe('MoviesService', () => {
 
         moviesRepository.findOne.mockReturnValue(expectedMovie);
         moviesRepository.save.mockReturnValue(expectedMovie);
-        const updatedMovie = await moviesService.updateById(
-          movieId,
-          updateData,
-        );
+        const updatedMovie = await moviesController.update(movieId, updateData);
         expect(updatedMovie).toEqual(expectedMovie);
       });
     });
 
     describe('failed update', () => {
       it('update by id ', async () => {
-        const movieId = 1;
+        const movieId = '1';
         const updateDTO: UpdateMovieDto = {};
         moviesRepository.save.mockReturnValue(undefined);
 
         try {
-          await moviesService.updateById(movieId, updateDTO);
+          await moviesController.update(movieId, updateDTO);
         } catch (error) {
           expect(error).toBeInstanceOf(NotFoundException);
         }
@@ -200,18 +196,18 @@ describe('MoviesService', () => {
   describe('Remove one movie', () => {
     describe('success remove', () => {
       it('remove by id', async () => {
-        const movieId = 1;
+        const movieId = '1';
         moviesRepository.findOne.mockReturnValue({});
-        const deleteUser = await moviesService.remove(movieId);
+        const deleteUser = await moviesController.remove(movieId);
         expect(deleteUser).toBeTruthy();
       });
     });
 
     describe('failed remove', () => {
       it('failed remove by id', async () => {
-        const movieId = 1;
+        const movieId = '1';
         try {
-          await moviesService.remove(movieId);
+          await moviesController.remove(movieId);
         } catch (error) {
           expect(error).toBeInstanceOf(NotFoundException);
         }
@@ -222,13 +218,13 @@ describe('MoviesService', () => {
   describe('add tag to movie', () => {
     describe('success ', () => {
       it('sucess with idtag and idmovie', async () => {
-        const idTag = 1;
-        const idMovie = 1;
+        const idTag = '1';
+        const idMovie = '1';
 
         moviesRepository.findOne.mockReturnValue({});
         tagsRepository.findOne.mockReturnValue({});
         moviesRepository.save.mockReturnValue({});
-        const added = await moviesService.addTagToMovie(idTag, idMovie);
+        const added = await moviesController.addTag(idTag, idMovie);
 
         expect(added).toBeTruthy();
       });
@@ -236,14 +232,34 @@ describe('MoviesService', () => {
 
     describe('failed ', () => {
       it('failed by notFoundEx', async () => {
-        const idTag = 1;
-        const idMovie = 1;
+        const idTag = '1';
+        const idMovie = '1';
         try {
-          await moviesService.addTagToMovie(idTag, idMovie);
+          await moviesController.addTag(idTag, idMovie);
         } catch (error) {
           expect(error).toBeInstanceOf(NotFoundException);
         }
       });
+    });
+  });
+
+  describe('get tags', () => {
+    it('get tags', async () => {
+      const idMovie = '1';
+      const expectedData = ['terror'];
+
+      moviesRepository.findOne.mockReturnValue({ tags: ['terror'] });
+      const data = await moviesController.getTags(idMovie);
+      expect(data).toEqual(expectedData);
+    });
+
+    it('failed', async () => {
+      const idMovie = '1';
+      try {
+        await moviesController.getTags(idMovie);
+      } catch (error) {
+        expect(error).toBeInstanceOf(NotFoundException);
+      }
     });
   });
 });

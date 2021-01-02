@@ -1,4 +1,4 @@
-import { StateMovieEntity } from 'src/movies/entities/state-movie.entity';
+import { StateMovieEntity } from 'src/rent-buy-movies/entities/state-movie.entity';
 
 export class StateMoviesDTO {
   RENT: StateMovieEntity;

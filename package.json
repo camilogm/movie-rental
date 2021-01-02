@@ -18,12 +18,13 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "test:e2e": "jest --config ./test/e2e/jest-e2e.json",
     "typeorm": "npx  ./node_modules/typeorm/cli.js",
     "migration:generate": "nest build && npm run typeorm migration:generate -- -n ",
     "migration": "nest build  && npm run typeorm migration:run"
   },
   "dependencies": {
+    "@nestjs-modules/mailer": "^1.5.1",
     "@nestjs/common": "^7.5.1",
     "@nestjs/config": "^0.6.1",
     "@nestjs/core": "^7.5.1",
@@ -38,9 +39,11 @@
     "class-validator": "^0.12.2",
     "joi": "^17.3.0",
     "moment": "^2.29.1",
+    "nodemailer": "^6.4.17",
     "passport": "^0.4.1",
     "passport-jwt": "^4.0.0",
     "pg": "^8.5.1",
+    "pug": "^3.0.0",
     "reflect-metadata": "^0.1.13",
     "rimraf": "^3.0.2",
     "rxjs": "^6.6.3",
@@ -70,6 +73,19 @@
     "typescript": "^4.0.5"
   },
   "jest": {
+    "coveragePathIgnorePatterns": [
+      "src/main.ts",
+      "dist",
+      "coverage",
+      "node_modules",
+      "src/migrations",
+      "test-config",
+      "interfaces",
+      "jestGlobalMocks.ts",
+      ".module.ts",
+      ".dto.ts",
+      ".entity.ts"
+    ],
     "moduleFileExtensions": [
       "js",
       "json",

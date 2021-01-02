@@ -1,9 +1,12 @@
 import { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
-import { UserEntity } from '../../users/entities/user.entity';
-import { AuthModule } from '../auth.module';
-import { AuthService } from '../auth.service';
+import { UserEntity } from '../../src/users/entities/user.entity';
+import { AuthModule } from '../../src/auth/auth.module';
+import { AuthService } from '../../src/auth/auth.service';
 import request from 'supertest';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { RoleEntity } from '../../src/users/entities/role.entity';
+import { UsersModule } from '../../src/users/users.module';
 
 class JWTResposneDTO {
   jwt: string;
@@ -19,6 +22,7 @@ describe('auth endpoints', () => {
   beforeAll(async () => {
     const module = await Test.createTestingModule({
       imports: [AuthModule],
+      providers: [],
     })
       .overrideProvider(AuthService)
       .useValue(authService)
@@ -26,6 +30,10 @@ describe('auth endpoints', () => {
 
     app = module.createNestApplication();
     await app.init();
+  });
+
+  it('should be defined', () => {
+    expect(app).toBeDefined();
   });
 
   it(`/POST login`, () => {

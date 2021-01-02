@@ -2,12 +2,12 @@ import { ConflictException, Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { AccountsService } from '../../users/providers/accounts.service';
 import { Repository } from 'typeorm';
-import { CreateRentBuy } from '../dto/movies-dto/create-rent-buy.dto';
+import { CreateRentBuy } from '../dto/create-rent-buy.dto';
 import { RentBuyEntity } from '../entities/rent-buy.entity';
-import { MoviesService } from './movies.service';
+import { MoviesService } from '../../movies/providers/movies.service';
 import * as moment from 'moment';
 import { BUY_OPERATION, STATES_MOVIES_PROVIDER } from '../../constants';
-import { StateMoviesDTO } from '../dto/movies-dto/state-movies.dto';
+import { StateMoviesDTO } from '../dto/state-movies.dto';
 
 @Injectable()
 export class RentBuyService {

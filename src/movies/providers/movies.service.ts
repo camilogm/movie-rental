@@ -21,7 +21,7 @@ export class MoviesService {
 
     const savedMovie = await this.moviesRepository.save(movie);
 
-    if (savedMovie) return savedMovie;
+    return savedMovie;
   }
 
   async findSortedAlphabetic() {
@@ -56,7 +56,7 @@ export class MoviesService {
       ...updatedMovieData,
     });
 
-    if (updatedMovieData) return updatedMovie;
+    return updatedMovie;
   }
 
   async updateByEntity(movie: MovieEntity, updateMovieDto: UpdateMovieDto) {
@@ -89,6 +89,6 @@ export class MoviesService {
   async getMovieTags(idMovie: number) {
     const movie = await this.findOneById(idMovie);
 
-    return movie.tags;
+    return movie.tags ? movie.tags : [];
   }
 }

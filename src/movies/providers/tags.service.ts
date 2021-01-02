@@ -34,9 +34,7 @@ export class TagsService {
       ...updateTagDTO,
     });
 
-    if (updatedTag) return updatedTag;
-
-    return null;
+    return updatedTag;
   }
 
   async delete(id: number) {

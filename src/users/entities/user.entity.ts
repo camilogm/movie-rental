@@ -1,6 +1,6 @@
 import { Exclude, Expose, Transform } from 'class-transformer';
 import { TokenEntity } from '../../auth/entities/token.entity';
-import { RentBuyEntity } from '../../movies/entities/rent-buy.entity';
+import { RentBuyEntity } from '../../rent-buy-movies/entities/rent-buy.entity';
 import {
   Column,
   Entity,

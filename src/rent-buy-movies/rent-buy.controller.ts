@@ -7,18 +7,14 @@ import {
   Post,
   Req,
 } from '@nestjs/common';
-import { PayloadDTO } from '../../auth/dto/payload.dto';
+import { PayloadDTO } from '../auth/dto/payload.dto';
 import {
   AllowedRoles,
   ROLE_CLIENT,
-} from '../../common/decorators/authorization.decorator';
-import {
-  BUY_OPERATION,
-  RENT_OPERATION,
-  RETURN_OPERATION,
-} from '../../constants';
-import { CreateRentBuy } from '../dto/movies-dto/create-rent-buy.dto';
-import { RentBuyService } from '../providers/rent-buy.service';
+} from '../common/decorators/authorization.decorator';
+import { BUY_OPERATION, RENT_OPERATION, RETURN_OPERATION } from '../constants';
+import { CreateRentBuy } from './dto/create-rent-buy.dto';
+import { RentBuyService } from './providers/rent-buy.service';
 
 @Controller('accounts/me/movie')
 @AllowedRoles(ROLE_CLIENT)

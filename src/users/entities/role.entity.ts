@@ -11,9 +11,4 @@ export class RoleEntity {
 
   @OneToMany(() => UserEntity, (user) => user.role)
   users: UserEntity[];
-
-  constructor(id: number, name: string) {
-    this.id = id;
-    this.name = name;
-  }
 }

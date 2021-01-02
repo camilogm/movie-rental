@@ -8,7 +8,7 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { UserEntity } from '../../users/entities/user.entity';
-import { RentBuyEntity } from './rent-buy.entity';
+import { RentBuyEntity } from '../../rent-buy-movies/entities/rent-buy.entity';
 import { TagEntity } from './tag.entity';
 
 @Entity('movies')

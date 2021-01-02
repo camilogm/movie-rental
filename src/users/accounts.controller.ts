@@ -23,30 +23,30 @@ import { PayloadDTO } from '../auth/dto/payload.dto';
 @Controller('accounts')
 @AllowedRoles(ROLE_ADMIN, ROLE_CLIENT)
 export class AccountsController {
-  constructor(private readonly usersService: AccountsService) {}
+  constructor(private readonly accountsService: AccountsService) {}
 
   @Post()
   @Public()
   create(@Body() createUserDto: CreateUserDto) {
-    return this.usersService.createClient(createUserDto);
+    return this.accountsService.createClient(createUserDto);
   }
 
   @Get('/me')
   findOne(@Req() request) {
     const user: PayloadDTO = request.user;
-    return this.usersService.findOneById(user.sub);
+    return this.accountsService.findOneById(user.sub);
   }
 
   @Patch('/me')
   update(@Req() request, @Body() updateUserDto: UpdateUserDto) {
     const user: PayloadDTO = request.user;
-    return this.usersService.update(user.sub, updateUserDto);
+    return this.accountsService.update(user.sub, updateUserDto);
   }
 
   @Delete('/me')
   @HttpCode(HttpStatus.NO_CONTENT)
   remove(@Req() request) {
     const user: PayloadDTO = request.user;
-    return this.usersService.remove(user.sub);
+    return this.accountsService.remove(user.sub);
   }
 }

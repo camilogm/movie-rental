@@ -2,58 +2,63 @@ import { NotFoundException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { ROLES_PROVIDER } from '../../constants';
-import { Connection, Repository } from 'typeorm';
 import { CreateUserDto } from '../dto/user-dtos/create-user.dto';
 import { UpdateUserDto } from '../dto/user-dtos/update-user.dto';
 import { RoleEntity } from '../entities/role.entity';
 import { UserEntity } from '../entities/user.entity';
 import { AccountsService } from '../providers/accounts.service';
+import { AccountsController } from '../accounts.controller';
+import {
+  createMockRepository,
+  MockRepository,
+} from '../../../test/TypeORM.mock';
+import { PayloadDTO } from '../../auth/dto/payload.dto';
 
-type MockRepository<T = any> = Partial<Record<keyof Repository<T>, jest.Mock>>;
-const createMockRepository = <T = any>(): MockRepository<T> => ({
-  findOne: jest.fn(),
-  save: jest.fn(),
-  find: jest.fn(),
-  remove: jest.fn(),
-  create: jest.fn(),
-});
+const payLoad: PayloadDTO = {
+  sub: 1,
+  username: 'test',
+  userRole: 'CLIENT',
+};
+
+const request = {
+  user: payLoad,
+};
 
 describe('UsersService', () => {
-  let service: AccountsService;
+  let accountsService: AccountsService;
+  let accountsController: AccountsController;
   let userRepository: MockRepository;
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
       providers: [
         AccountsService,
-        { provide: Connection, useValue: {} },
         {
           provide: getRepositoryToken(UserEntity),
           useValue: createMockRepository(),
         },
-        {
-          provide: getRepositoryToken(RoleEntity),
-          useValue: createMockRepository(),
-        },
         { provide: ROLES_PROVIDER, useValue: [0, 1] },
       ],
+      controllers: [AccountsController],
     }).compile();
 
-    service = module.get<AccountsService>(AccountsService);
     userRepository = module.get<MockRepository>(getRepositoryToken(UserEntity));
+    accountsController = module.get<AccountsController>(AccountsController);
+    accountsService = module.get<AccountsService>(AccountsService);
   });
 
-  it('user service be defined', () => {
-    expect(service).toBeDefined();
+  it('should be defined', () => {
+    expect(accountsController).toBeDefined();
+    expect(accountsService).toBeDefined();
   });
 
   describe('findOne', () => {
     describe('when user account exists', () => {
       it('should a user by a userId', async () => {
-        const userId = 1;
         const expectedUser = {};
         userRepository.findOne.mockReturnValue(expectedUser);
-        const user = await service.findOneById(userId);
+
+        const user = await accountsController.findOne(request);
         expect(user).toEqual(expectedUser);
       });
 
@@ -61,17 +66,16 @@ describe('UsersService', () => {
         const userName = 'gmcamiloe';
         const expectedUser = {};
         userRepository.findOne.mockReturnValue(expectedUser);
-        const user = await service.findOneByUserName(userName);
+        const user = await accountsService.findOneByUserName(userName);
         expect(user).toEqual(expectedUser);
       });
     });
 
     describe('otherwise', () => {
       it(`must throw when the userid doesn't exist`, async () => {
-        const userId = 1;
         userRepository.findOne.mockReturnValue(undefined);
         try {
-          await service.findOneById(userId);
+          await accountsController.findOne(request);
         } catch (error) {
           expect(error).toBeInstanceOf(NotFoundException);
         }
@@ -81,7 +85,7 @@ describe('UsersService', () => {
         const userName = 'gmcamiloe';
         userRepository.findOne.mockReturnValue(undefined);
         try {
-          await service.findOneByUserName(userName);
+          await accountsService.findOneByUserName(userName);
         } catch (error) {
           expect(error).toBeInstanceOf(NotFoundException);
         }
@@ -99,14 +103,18 @@ describe('UsersService', () => {
           password: '123',
         };
 
+        const role = new RoleEntity();
+        role.id = 3;
+        role.name = 'CLIENT';
+
         const expectedResult: UserEntity = {
           id: 1,
           ...user,
-          role: new RoleEntity(3, 'CLIENT'),
+          role,
         };
 
         userRepository.save.mockReturnValue(expectedResult);
-        const userCreated = await service.createClient(user);
+        const userCreated = await accountsController.create(user);
 
         expect(userCreated).toEqual(expectedResult);
       });
@@ -123,7 +131,7 @@ describe('UsersService', () => {
 
         userRepository.save.mockReturnValue(undefined);
         try {
-          await service.createClient(user);
+          await accountsController.create(user);
         } catch (error) {
           expect(error).toBeInstanceOf(TypeError);
         }
@@ -134,14 +142,17 @@ describe('UsersService', () => {
   describe('updateOne', () => {
     describe('success edit account', () => {
       it('updated account client', async () => {
-        const id = 1;
+        const id = '1';
+        const role = new RoleEntity();
+        role.id = 3;
+        role.name = 'CLIENT';
 
         const registeredUser = {
           id,
           userName: 'gmcamiloe',
           firstName: 'Camilo',
           lastName: 'Gonzalez',
-          role: new RoleEntity(3, 'CLIENT'),
+          role,
         };
 
         const updatedUserData: UpdateUserDto = {
@@ -155,7 +166,10 @@ describe('UsersService', () => {
 
         userRepository.findOne.mockReturnValue(expectedData);
         userRepository.save.mockReturnValue(expectedData);
-        const userUpdated = await service.update(id, updatedUserData);
+        const userUpdated = await accountsController.update(
+          request,
+          updatedUserData,
+        );
 
         expect(userUpdated).toEqual(expectedData);
       });
@@ -163,10 +177,9 @@ describe('UsersService', () => {
 
     describe('throw edit account', () => {
       it(`profile doesn't exit`, async () => {
-        const id = 1;
         const updateUserDto: UpdateUserDto = {};
         try {
-          await service.update(id, updateUserDto);
+          await accountsController.update(request, updateUserDto);
         } catch (error) {
           expect(error).toBeInstanceOf(NotFoundException);
         }
@@ -177,18 +190,16 @@ describe('UsersService', () => {
   describe('delete account', () => {
     describe('removed sucess user', () => {
       it('removed client', async () => {
-        const id = 1;
         userRepository.findOne.mockReturnValue({});
-        const deletedUser = await service.remove(id);
+        const deletedUser = await accountsController.remove(request);
         expect(deletedUser).toBeTruthy();
       });
     });
 
     describe('throw removed user', () => {
       it(`userid doesn't exist`, async () => {
-        const id = 1;
         try {
-          await service.remove(id);
+          await accountsController.remove(request);
         } catch (error) {
           expect(error).toBeInstanceOf(NotFoundException);
         }

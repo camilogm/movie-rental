@@ -34,7 +34,7 @@ export class TagsController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  delete(@Param('id') id: number) {
-    return this.tagsService.delete(id);
+  delete(@Param('id') id: string) {
+    return this.tagsService.delete(+id);
   }
 }

@@ -9,6 +9,7 @@ import { AuthModule } from './auth/auth.module';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { OwnProfileChangesGuard } from './auth/guards/own-profile-changes.guard';
 import { RolesGuard } from './auth/guards/roles.guard';
+import { RentBuyMovieModule } from './rent-buy-movies/rent-buy.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { RolesGuard } from './auth/guards/roles.guard';
     TypeOrmModule.forRoot(),
     MoviesModule,
     AuthModule,
+    RentBuyMovieModule,
   ],
   controllers: [],
   providers: [

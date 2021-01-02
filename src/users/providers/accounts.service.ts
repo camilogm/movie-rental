@@ -25,7 +25,7 @@ export class AccountsService {
 
     const savedUser = await this.userRepository.save(newUser);
 
-    if (savedUser) return savedUser;
+    return savedUser;
   }
 
   async findOneById(id: number) {
@@ -62,7 +62,8 @@ export class AccountsService {
       password,
     });
     const updatedUser = await this.userRepository.save(updatedUserData);
-    if (updatedUser) return updatedUser;
+
+    return updatedUser;
   }
 
   async remove(id: number) {

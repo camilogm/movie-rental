@@ -11,12 +11,20 @@ import {
 } from '../../../test/TypeORM.mock';
 import { UserEntity } from '../../users/entities/user.entity';
 import { AccountsService } from '../../users/providers/accounts.service';
+import { AuthController } from '../auth.controller';
 import { AuthService } from '../auth.service';
 import { LoginDTO } from '../dto/login.dto';
 import { TokenEntity } from '../entities/token.entity';
 
+const registeredUser = {
+  password: '$2b$10$NhrQy5sSYFzMrchwrsp0d./Q1WulD9MJHQ8Z2IS9k2FjH/PFLKZ72',
+};
+
+const inputPassword = '12345678';
+
 describe('Auth Service', () => {
   let authService: AuthService;
+  let authController: AuthController;
   let accountsService: AccountsService;
   let tokenMockRepository: MockRepository;
 
@@ -37,9 +45,11 @@ describe('Auth Service', () => {
           useValue: createMockRepository(),
         },
       ],
+      controllers: [AuthController],
     }).compile();
 
     accountsService = module.get<AccountsService>(AccountsService);
+    authController = module.get<AuthController>(AuthController);
     authService = module.get<AuthService>(AuthService);
     tokenMockRepository = module.get<MockRepository>(
       getRepositoryToken(TokenEntity),
@@ -50,16 +60,13 @@ describe('Auth Service', () => {
     expect(authService).toBeDefined();
     expect(tokenMockRepository).toBeDefined();
     expect(accountsService).toBeDefined();
+    expect(authController).toBeDefined();
   });
 
-  describe('validate user', () => {
+  describe('validate user -> authService', () => {
     describe('success', () => {
       it('match credentials', async () => {
-        const loginDTO: LoginDTO = { username: 'gm', password: 'tarea6secret' };
-        const registeredUser = {
-          password:
-            '$2b$10$TlE9g55QPrr4wLdi43VY/Oz8dCfyUX1ug1VGUkAeUjgxCCFGLff5O',
-        };
+        const loginDTO: LoginDTO = { username: 'gm', password: inputPassword };
 
         (await accountsService.findOneByUserName(loginDTO.username)).password =
           registeredUser.password;
@@ -71,7 +78,10 @@ describe('Auth Service', () => {
 
     describe('fail', () => {
       it('no match credentials', async () => {
-        const loginDTO: LoginDTO = { username: 'gm', password: '123' };
+        const loginDTO: LoginDTO = {
+          username: 'gm',
+          password: `${inputPassword}extrafailedpass`,
+        };
 
         try {
           await authService.validateUser(loginDTO);
@@ -81,7 +91,7 @@ describe('Auth Service', () => {
       });
 
       it('internal error', async () => {
-        const loginDTO: LoginDTO = { username: 'gm', password: '123' };
+        const loginDTO: LoginDTO = { username: 'gm', password: inputPassword };
 
         try {
           (
@@ -96,30 +106,48 @@ describe('Auth Service', () => {
     });
   }); // end of validate user
 
-  describe('login', () => {
+  describe('login -> authController', () => {
     describe('success', () => {
-      it('match credentials', async () => {
-        const loginDTO: LoginDTO = { username: 'gm', password: 'tarea6secret' };
-        const registeredUser = {
-          password:
-            '$2b$10$TlE9g55QPrr4wLdi43VY/Oz8dCfyUX1ug1VGUkAeUjgxCCFGLff5O',
+      it('success login controller', async () => {
+        const loginDTO: LoginDTO = { username: 'gm', password: inputPassword };
+
+        (await accountsService.findOneByUserName(loginDTO.username)).password =
+          registeredUser.password;
+
+        const data = await authController.login(loginDTO);
+        expect(data).toBeDefined();
+      });
+    });
+
+    describe('failed', () => {
+      it('no Match credentials', async () => {
+        const loginDTO: LoginDTO = {
+          username: 'gm',
+          password: `${inputPassword}incorrectaExtra`,
         };
 
         (await accountsService.findOneByUserName(loginDTO.username)).password =
           registeredUser.password;
 
-        const data = await authService.login(loginDTO);
-        expect(data).toBeDefined();
+        try {
+        } catch (error) {
+          expect(error).toBeInstanceOf(UnauthorizedException);
+        }
       });
     });
   });
 
-  describe('logout', () => {
+  describe('logout -> authController', () => {
     it('success', async () => {
       const token = '';
 
       tokenMockRepository.findOne.mockReturnValue({});
-      const data = await authService.logout(token);
+      const request: any = {
+        headers: {
+          authorization: token,
+        },
+      };
+      const data = await authController.logout(request);
       expect(data).toBeTruthy();
     });
   });

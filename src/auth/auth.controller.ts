@@ -19,16 +19,16 @@ export class AuthController {
   @Post('login')
   @Public()
   @HttpCode(HttpStatus.OK)
-  login(@Body() loginDTO: LoginDTO) {
+  async login(@Body() loginDTO: LoginDTO) {
     return this.authService.login(loginDTO);
   }
 
   @Get('logout')
   @HttpCode(HttpStatus.NO_CONTENT)
-  logout(@Req() request: Request) {
+  async logout(@Req() request: Request) {
     const jwt = request.headers?.authorization
       ?.toString()
       .replace('Bearer ', '');
-    this.authService.logout(jwt);
+    return this.authService.logout(jwt);
   }
 }
