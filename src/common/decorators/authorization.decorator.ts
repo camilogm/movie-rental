@@ -16,9 +16,14 @@ export const OwnProfileChanges = () => SetMetadata(OWN_PROFILE_CHAGNES, true);
  * defines the roles of the endpoint
  */
 export const USER_ROLES = 'Allowed_Roles';
+export const OVERRIDE_ROLES = 'Override_Roles';
 export const ROLE_SUPER_ADMIN = 'SUPERADMIN';
 export const ROLE_ADMIN = 'ADMIN';
 export const ROLE_CLIENT = 'CLIENT';
 export const ALL_ROLES = [ROLE_SUPER_ADMIN, ROLE_ADMIN, ROLE_CLIENT];
+
 export const AllowedRoles = (...roles: string[]) =>
   SetMetadata(USER_ROLES, roles);
+
+export const OverrideAllowedRoles = (...roles: string[]) =>
+  SetMetadata(OVERRIDE_ROLES, roles);

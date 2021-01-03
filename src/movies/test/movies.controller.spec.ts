@@ -6,16 +6,27 @@ import {
   createMockRepository,
   MockRepository,
 } from '../../../test/TypeORM.mock';
-import { CreateMovieDto } from '../dto/movies-dto/create-movie.dto';
 import { UpdateMovieDto } from '../dto/movies-dto/update-movie.dto';
 import { MovieEntity } from '../entities/movie.entity';
 import { MoviesService } from '../providers/movies.service';
 import { TagEntity } from '../entities/tag.entity';
 import { MoviesController } from '../controllers/movies.controller';
+import { CreateMovieDto } from '../dto/movies-dto/create-movie.dto';
+
+const mockCreateDTO: CreateMovieDto = {
+  title: 'Rock I',
+  description: 'The interesting movie about the fighter Rock Balboa',
+  poster:
+    'https://static1.abc.es/media/play/2017/09/28/avatar-kVmB--1240x698@abc.jpeg',
+  salePrice: 5,
+  stock: 2,
+  trailerLink: 'https://youtube.com/',
+};
 
 describe('MoviesService', () => {
   let moviesRepository: MockRepository;
   let moviesController: MoviesController;
+  let moviesService: MoviesService;
 
   //this is defined becouse at the end , the findOneById function is used
   let tagsRepository: MockRepository;
@@ -42,6 +53,7 @@ describe('MoviesService', () => {
 
     moviesController = module.get<MoviesController>(MoviesController);
     tagsRepository = module.get<MockRepository>(getRepositoryToken(TagEntity));
+    moviesService = module.get<MoviesService>(MoviesService);
     moviesRepository = module.get<MockRepository>(
       getRepositoryToken(MovieEntity),
     );
@@ -51,6 +63,7 @@ describe('MoviesService', () => {
     expect(moviesRepository).toBeDefined();
     expect(tagsRepository).toBeDefined();
     expect(moviesController).toBeDefined();
+    expect(moviesService).toBeDefined();
   });
 
   describe('find One movie', () => {
@@ -102,16 +115,6 @@ describe('MoviesService', () => {
   describe('Create one', () => {
     describe('create success', () => {
       it('success create without tags', async () => {
-        const mockCreateDTO: CreateMovieDto = {
-          title: 'Avatar',
-          description: 'An interesting movie about the space',
-          poster:
-            'https://static1.abc.es/media/play/2017/09/28/avatar-kVmB--1240x698@abc.jpeg',
-          salePrice: 5,
-          stock: 0,
-          trailerLink: 'https://youtube.com/',
-        };
-
         const expectedMovie: MovieEntity = {
           id: 1,
           ...mockCreateDTO,
@@ -126,16 +129,6 @@ describe('MoviesService', () => {
 
     describe('failed create', () => {
       it('throw create', async () => {
-        const mockCreateDTO: CreateMovieDto = {
-          title: 'Avatar',
-          description: 'An interesting movie about the space',
-          poster:
-            'https://static1.abc.es/media/play/2017/09/28/avatar-kVmB--1240x698@abc.jpeg',
-          salePrice: 5,
-          stock: 0,
-          trailerLink: 'https://youtube.com/',
-        };
-
         try {
           await moviesController.create(mockCreateDTO);
         } catch (error) {
@@ -149,16 +142,6 @@ describe('MoviesService', () => {
     describe('success update', () => {
       it('by id', async () => {
         const movieId = '1';
-
-        const mockCreateDTO: CreateMovieDto = {
-          title: 'Avatar',
-          description: 'An interesting movie about the space',
-          poster:
-            'https://static1.abc.es/media/play/2017/09/28/avatar-kVmB--1240x698@abc.jpeg',
-          salePrice: 5,
-          stock: 0,
-          trailerLink: 'https://youtube.com/',
-        };
 
         const updateData: UpdateMovieDto = {
           title: 'Avatar 2',
@@ -176,10 +159,39 @@ describe('MoviesService', () => {
         const updatedMovie = await moviesController.update(movieId, updateData);
         expect(updatedMovie).toEqual(expectedMovie);
       });
+
+      it('by entity', async () => {
+        const movieId = '1';
+
+        const updateData: UpdateMovieDto = {
+          title: 'Avatar ',
+          description: 'The movie of the blue beings',
+        };
+
+        const movieRegistered: MovieEntity = {
+          id: +movieId,
+          ...mockCreateDTO,
+          availability: !!mockCreateDTO.stock,
+        };
+
+        const expectedData: MovieEntity = {
+          id: +movieId,
+          ...mockCreateDTO,
+          ...updateData,
+          availability: !!mockCreateDTO.stock,
+        };
+
+        moviesRepository.save.mockReturnValue(expectedData);
+        const data = await moviesService.updateByEntity(
+          movieRegistered,
+          updateData,
+        );
+        expect(data).toEqual(expectedData);
+      });
     });
 
-    describe('failed update', () => {
-      it('update by id ', async () => {
+    describe('failed update by id', () => {
+      it('Notfound movie ', async () => {
         const movieId = '1';
         const updateDTO: UpdateMovieDto = {};
         moviesRepository.save.mockReturnValue(undefined);
@@ -188,6 +200,38 @@ describe('MoviesService', () => {
           await moviesController.update(movieId, updateDTO);
         } catch (error) {
           expect(error).toBeInstanceOf(NotFoundException);
+        }
+      });
+
+      it('failed TypeErorr', async () => {
+        const movieId = '1';
+        const updateDTO: UpdateMovieDto = {};
+        moviesRepository.findOne.mockReturnValue({});
+        moviesRepository.save.mockReturnValue({});
+        try {
+          await moviesController.update(movieId, updateDTO);
+        } catch (error) {
+          expect(error).toBeInstanceOf(TypeError);
+        }
+      });
+    });
+
+    describe('failed update by movieEntity', () => {
+      it('type error', async () => {
+        const movieId = '1';
+
+        const updateData: UpdateMovieDto = {};
+
+        const movieRegistered: MovieEntity = {
+          id: +movieId,
+          ...mockCreateDTO,
+          availability: !!mockCreateDTO.stock,
+        };
+        moviesRepository.save.mockReturnValue({});
+        try {
+          await moviesService.updateByEntity(movieRegistered, updateData);
+        } catch (error) {
+          expect(error).toBeInstanceOf(TypeError);
         }
       });
     });

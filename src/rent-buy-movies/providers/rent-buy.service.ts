@@ -8,10 +8,13 @@ import { MoviesService } from '../../movies/providers/movies.service';
 import * as moment from 'moment';
 import { BUY_OPERATION, STATES_MOVIES_PROVIDER } from '../../constants';
 import { StateMoviesDTO } from '../dto/state-movies.dto';
+import { UserEntity } from '../../users/entities/user.entity';
+import { MailerService } from '@nestjs-modules/mailer';
 
 @Injectable()
 export class RentBuyService {
   constructor(
+    private readonly mailService: MailerService,
     private readonly userService: AccountsService,
     private readonly moviesService: MoviesService,
     @InjectRepository(RentBuyEntity)
@@ -54,19 +57,15 @@ export class RentBuyService {
     return movieRented;
   }
 
-  async operation(
+  async rentOrBuyBuilder(
     clientId: number,
     rentMovieDTO: CreateRentBuy,
     typeOperation: string,
   ) {
-    const user = await this.userService.findOneById(clientId);
-    const movie = await this.moviesService.findOneById(rentMovieDTO.movieId);
-
-    if (
-      typeOperation !== BUY_OPERATION &&
-      (await this.getMovieRentedByClientId(user.id))
-    )
-      throw new ConflictException('Client already has a movie in possesion');
+    const [user, movie] = await Promise.all([
+      this.userService.findOneById(clientId),
+      this.moviesService.findOneById(rentMovieDTO.movieId),
+    ]);
 
     if (movie.stock === 0)
       throw new ConflictException('There are not enough stock for this movie');
@@ -78,38 +77,96 @@ export class RentBuyService {
       typeOperation,
     );
 
-    const rentBuyMovieData = this.rentBuyRepository.create({
+    return this.rentBuyRepository.create({
       movie,
       user,
       transactionDate: moment().format(),
       ...operationTypes,
     });
-
-    //updating stock, substract one
-    await this.moviesService.updateByEntity(movie, {
-      stock: movie.stock - 1,
-    });
-
-    return await this.rentBuyRepository.save(rentBuyMovieData);
   }
 
-  async returnOrBuyMovieRented(clientId: number, typeOperation: string) {
+  async rentBuyTransaction(
+    clientId: number,
+    rentMovieDTO: CreateRentBuy,
+    typeOperation: string,
+  ) {
+    const [detail, userRentedMovie] = await Promise.all([
+      this.rentOrBuyBuilder(clientId, rentMovieDTO, typeOperation),
+      this.getMovieRentedByClientId(clientId),
+    ]);
+
+    if (typeOperation !== BUY_OPERATION && userRentedMovie)
+      throw new ConflictException('Client has a movie in possesion already');
+
+    await this.moviesService.updateByEntity(detail.movie, {
+      stock: detail.movie.stock - 1,
+    });
+
+    const invoiceSaved = await this.rentBuyRepository.save(detail);
+    this.sendFacture(detail?.user, invoiceSaved, typeOperation);
+    return invoiceSaved;
+  }
+
+  async returnRentedMovie(clientId: number) {
     const movieRented = await this.getMovieRentedByClientId(clientId);
 
     if (!movieRented || !movieRented?.movie)
       throw new ConflictException(`Client doesn't have a movie rented`);
 
-    movieRented.state =
-      typeOperation === BUY_OPERATION
-        ? this.stateMovies.BUY
-        : this.stateMovies.RETURNED;
+    movieRented.state = this.stateMovies.RETURNED;
 
     //only returns the movie to the stock if the client returns it
-    if (typeOperation !== BUY_OPERATION)
-      await this.moviesService.updateByEntity(movieRented.movie, {
-        stock: movieRented.movie.stock++,
-      });
+    await this.moviesService.updateByEntity(movieRented.movie, {
+      stock: movieRented.movie.stock + 1,
+    });
 
-    return await this.rentBuyRepository.save(movieRented);
+    const detail = await this.rentBuyRepository.save(movieRented);
+
+    return detail;
+  }
+
+  async buyRentedMovie(clientId: number) {
+    const movieRented = await this.getMovieRentedByClientId(clientId);
+
+    if (!movieRented || !movieRented?.movie)
+      throw new ConflictException(`Client doesn't have a movie rented`);
+
+    movieRented.state = this.stateMovies.BUY;
+
+    const detail = await this.rentOrBuyBuilder(
+      clientId,
+      {
+        movieId: movieRented.movie.id,
+      },
+      BUY_OPERATION,
+    );
+
+    await this.rentBuyRepository.save(movieRented);
+
+    const invoiceSaved = await this.rentBuyRepository.save(detail);
+    this.sendFacture(detail?.user, invoiceSaved, BUY_OPERATION);
+    return detail;
+  }
+
+  sendFacture(user: UserEntity, detail: RentBuyEntity, typeOperation: string) {
+    const subject = 'Thanks for prefer us! Transaction completed';
+    const description =
+      (typeOperation === BUY_OPERATION
+        ? 'Purchase of the movie : '
+        : 'Rent of the movie : ') + detail?.movie?.title;
+
+    this.mailService.sendMail({
+      to: user?.email,
+      from: 'noreply@movierental.com',
+      subject,
+      template: 'purchase',
+      context: {
+        user,
+        detail,
+        description,
+      },
+    });
+
+    return true;
   }
 }

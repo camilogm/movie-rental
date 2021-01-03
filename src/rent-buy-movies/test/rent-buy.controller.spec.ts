@@ -13,7 +13,6 @@ import {
   RENT_OPERATION,
   STATES_MOVIES_PROVIDER,
 } from '../../constants';
-import { StateMoviesDTO } from '../dto/state-movies.dto';
 import { CreateRentBuy } from '../dto/create-rent-buy.dto';
 import * as moment from 'moment';
 import { UserEntity } from '../../users/entities/user.entity';
@@ -21,6 +20,7 @@ import { MovieEntity } from '../../movies/entities/movie.entity';
 import { ConflictException, NotFoundException } from '@nestjs/common';
 import { RentBuyController } from '../rent-buy.controller';
 import { PayloadDTO } from '../../auth/dto/payload.dto';
+import { MailerService } from '@nestjs-modules/mailer';
 
 const payLoad: PayloadDTO = {
   sub: 1,
@@ -33,15 +33,19 @@ const request = {
 };
 
 describe('rentbuy service', () => {
-  let rentBuyServicee: RentBuyService;
+  let rentBuyService: RentBuyService;
   let rentBuyController: RentBuyController;
   let rentBuyMockRepository: MockRepository;
-  let moviesProvider: StateMoviesDTO;
+  let moviesRepository: MockRepository;
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
       controllers: [RentBuyController],
       providers: [
+        {
+          provide: MailerService,
+          useValue: { sendMail: jest.fn() },
+        },
         RentBuyService,
         {
           provide: AccountsService,
@@ -59,6 +63,10 @@ describe('rentbuy service', () => {
           useValue: createMockRepository(),
         },
         {
+          provide: getRepositoryToken(MovieEntity),
+          useValue: createMockRepository(),
+        },
+        {
           provide: STATES_MOVIES_PROVIDER,
           useValue: {
             RENT: {},
@@ -70,19 +78,21 @@ describe('rentbuy service', () => {
       ],
     }).compile();
 
-    rentBuyServicee = module.get<RentBuyService>(RentBuyService);
+    rentBuyService = module.get<RentBuyService>(RentBuyService);
+    moviesRepository = module.get<MockRepository>(
+      getRepositoryToken(MovieEntity),
+    );
     rentBuyController = module.get<RentBuyController>(RentBuyController);
-    moviesProvider = module.get<StateMoviesDTO>(STATES_MOVIES_PROVIDER);
     rentBuyMockRepository = module.get<MockRepository>(
       getRepositoryToken(RentBuyEntity),
     );
   });
 
   it('should be defined', () => {
-    expect(rentBuyServicee).toBeDefined();
+    expect(rentBuyService).toBeDefined();
     expect(rentBuyController).toBeDefined();
     expect(rentBuyMockRepository).toBeDefined();
-    expect(moviesProvider).toBeDefined();
+    expect(moviesRepository).toBeDefined();
   });
 
   describe('find rented movie', () => {
@@ -92,7 +102,7 @@ describe('rentbuy service', () => {
         const rentedMovieExpected = {};
 
         rentBuyMockRepository.findOne.mockReturnValue(rentedMovieExpected);
-        const rentedMovieDetail = await rentBuyServicee.getMovieRentedByClientId(
+        const rentedMovieDetail = await rentBuyService.getMovieRentedByClientId(
           clientId,
         );
 
@@ -104,7 +114,7 @@ describe('rentbuy service', () => {
         const rentedMovieExpected = undefined;
 
         rentBuyMockRepository.findOne.mockReturnValue(rentedMovieExpected);
-        const rentedMovieDetail = await rentBuyServicee.getMovieRentedByClientId(
+        const rentedMovieDetail = await rentBuyService.getMovieRentedByClientId(
           clientId,
         );
 
@@ -116,7 +126,7 @@ describe('rentbuy service', () => {
       it('throw type error ', async () => {
         const clientId = 1;
         try {
-          await rentBuyServicee.getMovieRentedByClientId(clientId);
+          await rentBuyService.getMovieRentedByClientId(clientId);
         } catch (error) {
           expect(error).toBeInstanceOf(TypeError);
         }
@@ -135,7 +145,7 @@ describe('rentbuy service', () => {
         state: {},
       };
 
-      const data = rentBuyServicee.getBuyRentData(
+      const data = rentBuyService.getBuyRentData(
         salePrice,
         rentDays,
         RENT_OPERATION,
@@ -152,7 +162,7 @@ describe('rentbuy service', () => {
         returnDate: null,
         state: {},
       };
-      const data = rentBuyServicee.getBuyRentData(salePrice, 0, BUY_OPERATION);
+      const data = rentBuyService.getBuyRentData(salePrice, 0, BUY_OPERATION);
 
       expect(data).toEqual(expectedData);
     });
@@ -164,8 +174,9 @@ describe('rentbuy service', () => {
         const rentMovieDTo: CreateRentBuy = {
           movieId: 1,
         };
-        const expectedData = {};
+        const expectedData = { movie: {} };
 
+        rentBuyMockRepository.create.mockReturnValue(expectedData);
         rentBuyMockRepository.save.mockReturnValue(expectedData);
         const data = await rentBuyController.clientRentMovie(
           request,
@@ -179,8 +190,9 @@ describe('rentbuy service', () => {
         const rentMovieDTO: CreateRentBuy = {
           movieId: 1,
         };
-        const expectedData = {};
+        const expectedData = { movie: {} };
 
+        rentBuyMockRepository.create.mockReturnValue(expectedData);
         rentBuyMockRepository.save.mockReturnValue(expectedData);
         const data = await rentBuyController.clientBuyMovie(
           request,
@@ -204,12 +216,19 @@ describe('rentbuy service', () => {
       });
 
       it('throw notFoundException', async () => {
+        const rentMovieDTo: CreateRentBuy = {
+          movieId: 1,
+        };
+        const expectedData = { movie: {} };
+
+        moviesRepository.save.mockReturnValue({});
+        rentBuyMockRepository.create.mockReturnValue(expectedData);
+        rentBuyMockRepository.save.mockReturnValue(expectedData);
         try {
           //Uses RENT_OPERATION or BUY_OPERATION is complety arbitrary for the test
           // is the same for both use cases
-          await rentBuyController.clientBuyMovie(request, {
-            movieId: 1,
-          });
+
+          await rentBuyController.clientBuyMovie(request, rentMovieDTo);
         } catch (error) {
           expect(error).toBeInstanceOf(NotFoundException);
         }
@@ -240,6 +259,7 @@ describe('rentbuy service', () => {
       };
 
       rentBuyMockRepository.findOne.mockReturnValue(expectedData);
+      rentBuyMockRepository.create.mockReturnValue(expectedData);
       rentBuyMockRepository.save.mockReturnValue(expectedData);
       const data = await rentBuyController.buyRentedMovie(request);
 
@@ -271,5 +291,52 @@ describe('rentbuy service', () => {
         expect(error).toBeInstanceOf(ConflictException);
       }
     });
-  });
+  }); //end of return or buy a rented movie
+
+  describe('send facture', () => {
+    describe('success', () => {
+      it('sended mail', async () => {
+        const clientId = '1';
+        const typeOperation = BUY_OPERATION;
+
+        rentBuyMockRepository.create.mockReturnValue({});
+        const repo = await rentBuyService.rentOrBuyBuilder(
+          +clientId,
+          {
+            movieId: 1,
+          },
+          typeOperation,
+        );
+
+        const sendedMail = rentBuyService.sendFacture(
+          repo.user,
+          repo,
+          typeOperation,
+        );
+        expect(sendedMail).toBeTruthy();
+      });
+    });
+
+    describe('fail', () => {
+      it('type error', async () => {
+        const clientId = '1';
+        const typeOperation = BUY_OPERATION;
+
+        rentBuyMockRepository.create.mockReturnValue({});
+        const repo = await rentBuyService.rentOrBuyBuilder(
+          +clientId,
+          {
+            movieId: 1,
+          },
+          typeOperation,
+        );
+
+        try {
+          rentBuyService.sendFacture(repo.user, repo, typeOperation);
+        } catch (error) {
+          expect(error).toBeInstanceOf(TypeError);
+        }
+      });
+    });
+  }); //end of send mail
 });

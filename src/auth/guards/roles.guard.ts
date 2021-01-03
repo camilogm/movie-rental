@@ -7,6 +7,7 @@ import {
 import { Reflector } from '@nestjs/core';
 import {
   ALL_ROLES,
+  OVERRIDE_ROLES,
   USER_ROLES,
 } from '../../common/decorators/authorization.decorator';
 import { Connection } from 'typeorm';
@@ -27,6 +28,36 @@ export class RolesGuard implements CanActivate {
     // isPublic constant is defined in jwt Auth Guard, the fist guard in the Chain
     if (isPublic) return true;
 
+    const metaDataRoles = this.getAllowedRoles(context);
+    const allowedRoles = metaDataRoles;
+
+    //extracts the token to check if exists into the database
+    const bearerToken = request.headers.authorization
+      .toString()
+      .replace('Bearer ', '');
+    await this.checkToken(bearerToken);
+
+    //jwtguard set request.user and contains the user role
+    const user: PayloadDTO = request.user;
+
+    if (allowedRoles.includes(user?.userRole)) return true;
+
+    throw new ForbiddenException(
+      `You don't have access to this resource. Ask to an administrator to get permissions`,
+    );
+  }
+
+  getAllowedRoles(context: ExecutionContext): string[] {
+    //Get if has override roles
+    const overrideRolesMetadata = this.reflector.get<string[]>(
+      OVERRIDE_ROLES,
+      context.getHandler(),
+    );
+
+    //If has a override of roles allowd, return that if not, search
+    // the metadata roles
+    if (overrideRolesMetadata) return overrideRolesMetadata;
+
     //get roles in metada controller if the controller has
     const rolesMetaDataController = this.reflector.get<string[]>(
       USER_ROLES,
@@ -45,22 +76,8 @@ export class RolesGuard implements CanActivate {
       .concat(rolesMetadataHandler ? rolesMetadataHandler : []);
 
     //if not roles metadata in none, allowed to all roles
-    const allowedRoles = rolesMetaData.length ? rolesMetaData : ALL_ROLES;
 
-    //extracts the token to check if exists into the database
-    const bearerToken = request.headers.authorization
-      .toString()
-      .replace('Bearer ', '');
-    await this.checkToken(bearerToken);
-
-    //jwtguard set request.user and contains the user role
-    const user: PayloadDTO = request.user;
-
-    if (allowedRoles.includes(user?.userRole)) return true;
-
-    throw new ForbiddenException(
-      `You don't have access to this resource. Ask to an administrator to get permissions`,
-    );
+    return rolesMetaData?.length ? rolesMetaData : ALL_ROLES;
   }
 
   async checkToken(tokenStr: string): Promise<boolean> {

@@ -1,4 +1,9 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateUserDto } from '../dto/user-dtos/create-user.dto';
@@ -33,7 +38,7 @@ export class AccountsService {
       relations: ['role'],
     });
 
-    if (!user) throw new NotFoundException();
+    if (!user) throw new NotFoundException(`Not found user with id ${id}`);
 
     return user;
   }
@@ -44,7 +49,8 @@ export class AccountsService {
       relations: ['role'],
     });
 
-    if (!user) throw new NotFoundException();
+    if (!user)
+      throw new NotFoundException(`Not found user with username ${userName}`);
 
     return user;
   }
@@ -72,5 +78,15 @@ export class AccountsService {
     await this.userRepository.remove(user);
 
     return true;
+  }
+
+  async updateRole(idUser: number, idRole: number) {
+    const user = await this.findOneById(idUser);
+
+    if (idRole === 1 || idUser === 1)
+      throw new ConflictException('Cannot be more of one Super admin');
+
+    user.role = this.roles.findRoleById(idRole);
+    return await this.userRepository.save(user);
   }
 }

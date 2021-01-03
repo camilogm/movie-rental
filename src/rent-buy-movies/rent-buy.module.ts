@@ -1,3 +1,4 @@
+import { MailerModule } from '@nestjs-modules/mailer';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { MoviesModule } from '../movies/movies.module';
@@ -14,6 +15,7 @@ import { RentBuyController } from './rent-buy.controller';
     TypeOrmModule.forFeature([RentBuyEntity]),
     UsersModule,
     MoviesModule,
+    MailerModule,
   ],
 })
 export class RentBuyMovieModule {}

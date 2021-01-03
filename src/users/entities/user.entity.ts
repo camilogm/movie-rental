@@ -28,6 +28,10 @@ export class UserEntity {
   @Expose()
   userName: string;
 
+  @Column({ length: 50, unique: true })
+  @Expose()
+  email: string;
+
   @Column({ length: 255, unique: true })
   @Exclude()
   password: string;

@@ -1,4 +1,4 @@
-import { NotFoundException } from '@nestjs/common';
+import { ConflictException, NotFoundException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { ROLES_PROVIDER } from '../../constants';
@@ -13,6 +13,7 @@ import {
   MockRepository,
 } from '../../../test/TypeORM.mock';
 import { PayloadDTO } from '../../auth/dto/payload.dto';
+import { RolesDTO } from '../dto/roles.dto';
 
 const payLoad: PayloadDTO = {
   sub: 1,
@@ -24,12 +25,27 @@ const request = {
   user: payLoad,
 };
 
+const user: CreateUserDto = {
+  userName: 'gmcamiloe',
+  firstName: 'Camilo',
+  lastName: 'Gonzalez',
+  password: '123',
+  email: 'gmcamiloe@gmail.com',
+};
+
 describe('UsersService', () => {
   let accountsService: AccountsService;
   let accountsController: AccountsController;
   let userRepository: MockRepository;
+  let rolesProvider: RolesDTO;
 
   beforeEach(async () => {
+    const roles = new RolesDTO(
+      new RoleEntity(1, 'SUPERADMIN'),
+      new RoleEntity(2, 'ADMIN'),
+      new RoleEntity(3, 'CLIENT'),
+    );
+
     const module = await Test.createTestingModule({
       providers: [
         AccountsService,
@@ -37,7 +53,7 @@ describe('UsersService', () => {
           provide: getRepositoryToken(UserEntity),
           useValue: createMockRepository(),
         },
-        { provide: ROLES_PROVIDER, useValue: [0, 1] },
+        { provide: ROLES_PROVIDER, useValue: roles },
       ],
       controllers: [AccountsController],
     }).compile();
@@ -45,11 +61,13 @@ describe('UsersService', () => {
     userRepository = module.get<MockRepository>(getRepositoryToken(UserEntity));
     accountsController = module.get<AccountsController>(AccountsController);
     accountsService = module.get<AccountsService>(AccountsService);
+    rolesProvider = module.get<RolesDTO>(ROLES_PROVIDER);
   });
 
   it('should be defined', () => {
     expect(accountsController).toBeDefined();
     expect(accountsService).toBeDefined();
+    expect(rolesProvider).toBeDefined();
   });
 
   describe('findOne', () => {
@@ -96,21 +114,10 @@ describe('UsersService', () => {
   describe('createOne', () => {
     describe('success create user', () => {
       it('client created', async () => {
-        const user: CreateUserDto = {
-          userName: 'gmcamiloe',
-          firstName: 'Camilo',
-          lastName: 'Gonzalez',
-          password: '123',
-        };
-
-        const role = new RoleEntity();
-        role.id = 3;
-        role.name = 'CLIENT';
-
         const expectedResult: UserEntity = {
           id: 1,
           ...user,
-          role,
+          role: rolesProvider.CLIENT,
         };
 
         userRepository.save.mockReturnValue(expectedResult);
@@ -122,13 +129,6 @@ describe('UsersService', () => {
 
     describe('failed create client', () => {
       it('must be a throw exception ', async () => {
-        const user: CreateUserDto = {
-          userName: 'gmcamiloe',
-          firstName: 'Camilo',
-          lastName: 'Gonzalez',
-          password: '123',
-        };
-
         userRepository.save.mockReturnValue(undefined);
         try {
           await accountsController.create(user);
@@ -143,16 +143,13 @@ describe('UsersService', () => {
     describe('success edit account', () => {
       it('updated account client', async () => {
         const id = '1';
-        const role = new RoleEntity();
-        role.id = 3;
-        role.name = 'CLIENT';
 
         const registeredUser = {
           id,
           userName: 'gmcamiloe',
           firstName: 'Camilo',
           lastName: 'Gonzalez',
-          role,
+          role: rolesProvider.CLIENT,
         };
 
         const updatedUserData: UpdateUserDto = {
@@ -206,4 +203,64 @@ describe('UsersService', () => {
       });
     });
   }); //end of delete user
+
+  describe('change role user', () => {
+    describe('success', () => {
+      it('change to admin', async () => {
+        const idUser = '3';
+        const idRole = '2';
+
+        const expectedData: UserEntity = {
+          id: 1,
+          ...user,
+          role: rolesProvider.ADMIN,
+        };
+
+        userRepository.findOne.mockReturnValue(expectedData);
+        userRepository.save.mockReturnValue(expectedData);
+        const data = await accountsController.changeRole(idUser, idRole);
+        expect(data).toEqual(expectedData);
+      });
+    });
+
+    describe('failed', () => {
+      it('trying to change admin', async () => {
+        const idUser = '1';
+        const idRole = '2';
+
+        userRepository.findOne.mockReturnValue({});
+        try {
+          await accountsController.changeRole(idUser, idRole);
+        } catch (error) {
+          expect(error).toBeInstanceOf(ConflictException);
+        }
+      });
+
+      it('tryng to add more superadmin', async () => {
+        const idUser = '2';
+        const idRole = '1';
+
+        userRepository.findOne.mockReturnValue({});
+        try {
+          await accountsController.changeRole(idUser, idRole);
+        } catch (error) {
+          expect(error).toBeInstanceOf(ConflictException);
+        }
+      });
+
+      it('type error', async () => {
+        const idUser = '3';
+        const idRole = '2';
+
+        userRepository.findOne.mockReturnValue({});
+        userRepository.save.mockReturnValue({});
+
+        try {
+          await accountsController.changeRole(idUser, idRole);
+        } catch (error) {
+          expect(error).toBeInstanceOf(TypeError);
+        }
+      });
+    });
+  }); //end of change role
 });

@@ -10,6 +10,7 @@ import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { OwnProfileChangesGuard } from './auth/guards/own-profile-changes.guard';
 import { RolesGuard } from './auth/guards/roles.guard';
 import { RentBuyMovieModule } from './rent-buy-movies/rent-buy.module';
+import { MailerModuleConfig } from './mail-config.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { RentBuyMovieModule } from './rent-buy-movies/rent-buy.module';
     MoviesModule,
     AuthModule,
     RentBuyMovieModule,
+    MailerModuleConfig,
   ],
   controllers: [],
   providers: [

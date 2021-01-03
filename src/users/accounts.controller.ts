@@ -8,15 +8,18 @@ import {
   HttpStatus,
   HttpCode,
   Req,
+  Param,
 } from '@nestjs/common';
 import { AccountsService } from './providers/accounts.service';
 import { CreateUserDto } from './dto/user-dtos/create-user.dto';
 import { UpdateUserDto } from './dto/user-dtos/update-user.dto';
 import {
   AllowedRoles,
+  OverrideAllowedRoles,
   Public,
   ROLE_ADMIN,
   ROLE_CLIENT,
+  ROLE_SUPER_ADMIN,
 } from '../common/decorators/authorization.decorator';
 import { PayloadDTO } from '../auth/dto/payload.dto';
 
@@ -48,5 +51,11 @@ export class AccountsController {
   remove(@Req() request) {
     const user: PayloadDTO = request.user;
     return this.accountsService.remove(user.sub);
+  }
+
+  @Patch('/:idUser/role/:idRole')
+  @OverrideAllowedRoles(ROLE_SUPER_ADMIN)
+  changeRole(@Param('idUser') idUser: string, @Param('idRole') idRole: string) {
+    return this.accountsService.updateRole(+idUser, +idRole);
   }
 }
