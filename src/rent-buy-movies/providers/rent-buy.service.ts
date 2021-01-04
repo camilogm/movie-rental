@@ -31,7 +31,7 @@ export class RentBuyService {
         : this.stateMovies.RENT;
 
     const price =
-      typeOperation === BUY_OPERATION ? salePrice : salePrice * 0.25 * daysRent;
+      typeOperation === BUY_OPERATION ? salePrice : salePrice * 0.1 * daysRent;
 
     const returnDate =
       typeOperation === BUY_OPERATION
@@ -61,13 +61,14 @@ export class RentBuyService {
     clientId: number,
     rentMovieDTO: CreateRentBuy,
     typeOperation: string,
+    buyRentedMovie = false,
   ) {
     const [user, movie] = await Promise.all([
       this.userService.findOneById(clientId),
       this.moviesService.findOneById(rentMovieDTO.movieId),
     ]);
 
-    if (movie.stock === 0)
+    if (movie.stock === 0 && !buyRentedMovie)
       throw new ConflictException('There are not enough stock for this movie');
 
     rentMovieDTO.daysRent = rentMovieDTO.daysRent ? rentMovieDTO.daysRent : 3;
@@ -139,6 +140,7 @@ export class RentBuyService {
         movieId: movieRented.movie.id,
       },
       BUY_OPERATION,
+      true,
     );
 
     await this.rentBuyRepository.save(movieRented);

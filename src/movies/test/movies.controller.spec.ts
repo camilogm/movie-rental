@@ -26,8 +26,6 @@ const mockCreateDTO: CreateMovieDto = {
 describe('MoviesService', () => {
   let moviesRepository: MockRepository;
   let moviesController: MoviesController;
-  let moviesService: MoviesService;
-
   //this is defined becouse at the end , the findOneById function is used
   let tagsRepository: MockRepository;
 
@@ -53,7 +51,6 @@ describe('MoviesService', () => {
 
     moviesController = module.get<MoviesController>(MoviesController);
     tagsRepository = module.get<MockRepository>(getRepositoryToken(TagEntity));
-    moviesService = module.get<MoviesService>(MoviesService);
     moviesRepository = module.get<MockRepository>(
       getRepositoryToken(MovieEntity),
     );
@@ -63,7 +60,6 @@ describe('MoviesService', () => {
     expect(moviesRepository).toBeDefined();
     expect(tagsRepository).toBeDefined();
     expect(moviesController).toBeDefined();
-    expect(moviesService).toBeDefined();
   });
 
   describe('find One movie', () => {
@@ -74,27 +70,6 @@ describe('MoviesService', () => {
         moviesRepository.findOne.mockReturnValue(expectedMovie);
         const movie = await moviesController.findOne(id);
         expect(movie).toEqual(expectedMovie);
-      });
-
-      describe('otherwise find one', () => {
-        it('found with tags', async () => {
-          const id = '1';
-          const expectedMovie = { tags: [] };
-
-          moviesRepository.findOne.mockReturnValue(expectedMovie);
-          const movie = await moviesService.findOneById(+id, true);
-          expect(movie).toEqual(expectedMovie);
-        });
-
-        it('found with users', async () => {
-          const id = '1';
-
-          const expectedMovie = { users: [] };
-
-          moviesRepository.findOne.mockReturnValue(expectedMovie);
-          const movie = await moviesService.findOneById(+id, false, true);
-          expect(movie).toEqual(expectedMovie);
-        });
       });
     });
 
@@ -180,35 +155,6 @@ describe('MoviesService', () => {
         const updatedMovie = await moviesController.update(movieId, updateData);
         expect(updatedMovie).toEqual(expectedMovie);
       });
-
-      it('by entity', async () => {
-        const movieId = '1';
-
-        const updateData: UpdateMovieDto = {
-          title: 'Avatar ',
-          description: 'The movie of the blue beings',
-        };
-
-        const movieRegistered: MovieEntity = {
-          id: +movieId,
-          ...mockCreateDTO,
-          availability: !!mockCreateDTO.stock,
-        };
-
-        const expectedData: MovieEntity = {
-          id: +movieId,
-          ...mockCreateDTO,
-          ...updateData,
-          availability: !!mockCreateDTO.stock,
-        };
-
-        moviesRepository.save.mockReturnValue(expectedData);
-        const data = await moviesService.updateByEntity(
-          movieRegistered,
-          updateData,
-        );
-        expect(data).toEqual(expectedData);
-      });
     });
 
     describe('failed update by id', () => {
@@ -231,26 +177,6 @@ describe('MoviesService', () => {
         moviesRepository.save.mockReturnValue({});
         try {
           await moviesController.update(movieId, updateDTO);
-        } catch (error) {
-          expect(error).toBeInstanceOf(TypeError);
-        }
-      });
-    });
-
-    describe('failed update by movieEntity', () => {
-      it('type error', async () => {
-        const movieId = '1';
-
-        const updateData: UpdateMovieDto = {};
-
-        const movieRegistered: MovieEntity = {
-          id: +movieId,
-          ...mockCreateDTO,
-          availability: !!mockCreateDTO.stock,
-        };
-        moviesRepository.save.mockReturnValue({});
-        try {
-          await moviesService.updateByEntity(movieRegistered, updateData);
         } catch (error) {
           expect(error).toBeInstanceOf(TypeError);
         }

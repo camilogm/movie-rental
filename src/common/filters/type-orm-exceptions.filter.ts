@@ -28,6 +28,7 @@ export class TypeOrmExceptionsFilter<T extends QueryFailedError>
       });
     }
 
+    console.log(typeOrmException);
     response.status(500).json({
       statusCode: 500,
       path: request.url,

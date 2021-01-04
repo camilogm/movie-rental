@@ -8,19 +8,14 @@ import {
 } from '../../../test/TypeORM.mock';
 import { RentBuyEntity } from '../entities/rent-buy.entity';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import {
-  BUY_OPERATION,
-  RENT_OPERATION,
-  STATES_MOVIES_PROVIDER,
-} from '../../constants';
 import { CreateRentBuy } from '../dto/create-rent-buy.dto';
-import * as moment from 'moment';
 import { UserEntity } from '../../users/entities/user.entity';
 import { MovieEntity } from '../../movies/entities/movie.entity';
 import { ConflictException, NotFoundException } from '@nestjs/common';
 import { RentBuyController } from '../rent-buy.controller';
 import { PayloadDTO } from '../../auth/dto/payload.dto';
 import { MailerService } from '@nestjs-modules/mailer';
+import { STATES_MOVIES_PROVIDER } from '../../constants';
 
 const payLoad: PayloadDTO = {
   sub: 1,
@@ -33,7 +28,6 @@ const request = {
 };
 
 describe('rentbuy service', () => {
-  let rentBuyService: RentBuyService;
   let rentBuyController: RentBuyController;
   let rentBuyMockRepository: MockRepository;
   let moviesRepository: MockRepository;
@@ -78,7 +72,6 @@ describe('rentbuy service', () => {
       ],
     }).compile();
 
-    rentBuyService = module.get<RentBuyService>(RentBuyService);
     moviesRepository = module.get<MockRepository>(
       getRepositoryToken(MovieEntity),
     );
@@ -89,84 +82,10 @@ describe('rentbuy service', () => {
   });
 
   it('should be defined', () => {
-    expect(rentBuyService).toBeDefined();
     expect(rentBuyController).toBeDefined();
     expect(rentBuyMockRepository).toBeDefined();
     expect(moviesRepository).toBeDefined();
   });
-
-  describe('find rented movie', () => {
-    describe('success found op', () => {
-      it('found movie rented by clientId', async () => {
-        const clientId = 1;
-        const rentedMovieExpected = {};
-
-        rentBuyMockRepository.findOne.mockReturnValue(rentedMovieExpected);
-        const rentedMovieDetail = await rentBuyService.getMovieRentedByClientId(
-          clientId,
-        );
-
-        expect(rentedMovieDetail).toEqual(rentedMovieExpected);
-      });
-
-      it(`client doesn't have rented movie`, async () => {
-        const clientId = 1;
-        const rentedMovieExpected = undefined;
-
-        rentBuyMockRepository.findOne.mockReturnValue(rentedMovieExpected);
-        const rentedMovieDetail = await rentBuyService.getMovieRentedByClientId(
-          clientId,
-        );
-
-        expect(rentedMovieDetail).toEqual(rentedMovieDetail);
-      });
-    });
-
-    describe('failed success found', () => {
-      it('throw type error ', async () => {
-        const clientId = 1;
-        try {
-          await rentBuyService.getMovieRentedByClientId(clientId);
-        } catch (error) {
-          expect(error).toBeInstanceOf(TypeError);
-        }
-      });
-    });
-  }); // end of get movie rented
-
-  describe('get buy/rent data', () => {
-    it('rent information (sale and date) is setting well', () => {
-      const salePrice = 2;
-      const rentDays = 10;
-
-      const expectedData = {
-        price: salePrice * 0.25 * rentDays,
-        returnDate: moment().add(rentDays, 'days').format(),
-        state: {},
-      };
-
-      const data = rentBuyService.getBuyRentData(
-        salePrice,
-        rentDays,
-        RENT_OPERATION,
-      );
-
-      expect(data).toEqual(expectedData);
-    });
-
-    it('buy information is setting well', () => {
-      const salePrice = 2;
-
-      const expectedData = {
-        price: salePrice,
-        returnDate: null,
-        state: {},
-      };
-      const data = rentBuyService.getBuyRentData(salePrice, 0, BUY_OPERATION);
-
-      expect(data).toEqual(expectedData);
-    });
-  }); //end of check data
 
   describe('buy or rent movie', () => {
     describe('success ', () => {
@@ -292,53 +211,6 @@ describe('rentbuy service', () => {
       }
     });
   }); //end of return or buy a rented movie
-
-  describe('send facture', () => {
-    describe('success', () => {
-      it('sended mail', async () => {
-        const clientId = '1';
-        const typeOperation = BUY_OPERATION;
-
-        rentBuyMockRepository.create.mockReturnValue({});
-        const repo = await rentBuyService.rentOrBuyBuilder(
-          +clientId,
-          {
-            movieId: 1,
-          },
-          typeOperation,
-        );
-
-        const sendedMail = rentBuyService.sendFacture(
-          repo.user,
-          repo,
-          typeOperation,
-        );
-        expect(sendedMail).toBeTruthy();
-      });
-    });
-
-    describe('fail', () => {
-      it('type error', async () => {
-        const clientId = '1';
-        const typeOperation = BUY_OPERATION;
-
-        rentBuyMockRepository.create.mockReturnValue({});
-        const repo = await rentBuyService.rentOrBuyBuilder(
-          +clientId,
-          {
-            movieId: 1,
-          },
-          typeOperation,
-        );
-
-        try {
-          rentBuyService.sendFacture(repo.user, repo, typeOperation);
-        } catch (error) {
-          expect(error).toBeInstanceOf(TypeError);
-        }
-      });
-    });
-  }); //end of send mail
 
   describe('add likes', () => {
     it('success', async () => {

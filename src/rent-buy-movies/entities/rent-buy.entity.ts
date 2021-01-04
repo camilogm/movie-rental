@@ -1,5 +1,11 @@
 import { UserEntity } from '../../users/entities/user.entity';
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  ManyToMany,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { MovieEntity } from '../../movies/entities/movie.entity';
 import { StateMovieEntity } from './state-movie.entity';
 import { Transform } from 'class-transformer';
@@ -35,4 +41,9 @@ export class RentBuyEntity {
   @Transform((state: StateMovieEntity) => state.name)
   @ManyToOne(() => StateMovieEntity, (state) => state.rentBuy)
   state: StateMovieEntity;
+
+  @ManyToMany(() => MovieEntity, {
+    onDelete: 'CASCADE',
+  })
+  movies: MovieEntity[];
 }

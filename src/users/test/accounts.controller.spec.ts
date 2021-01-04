@@ -34,7 +34,6 @@ const user: CreateUserDto = {
 };
 
 describe('UsersService', () => {
-  let accountsService: AccountsService;
   let accountsController: AccountsController;
   let userRepository: MockRepository;
   let rolesProvider: RolesDTO;
@@ -60,13 +59,11 @@ describe('UsersService', () => {
 
     userRepository = module.get<MockRepository>(getRepositoryToken(UserEntity));
     accountsController = module.get<AccountsController>(AccountsController);
-    accountsService = module.get<AccountsService>(AccountsService);
     rolesProvider = module.get<RolesDTO>(ROLES_PROVIDER);
   });
 
   it('should be defined', () => {
     expect(accountsController).toBeDefined();
-    expect(accountsService).toBeDefined();
     expect(rolesProvider).toBeDefined();
   });
 
@@ -79,14 +76,6 @@ describe('UsersService', () => {
         const user = await accountsController.findOne(request);
         expect(user).toEqual(expectedUser);
       });
-
-      it('should return a user by an username ', async () => {
-        const userName = 'gmcamiloe';
-        const expectedUser = {};
-        userRepository.findOne.mockReturnValue(expectedUser);
-        const user = await accountsService.findOneByUserName(userName);
-        expect(user).toEqual(expectedUser);
-      });
     });
 
     describe('otherwise', () => {
@@ -94,16 +83,6 @@ describe('UsersService', () => {
         userRepository.findOne.mockReturnValue(undefined);
         try {
           await accountsController.findOne(request);
-        } catch (error) {
-          expect(error).toBeInstanceOf(NotFoundException);
-        }
-      });
-
-      it(`must throw when the username doesn't exist`, async () => {
-        const userName = 'gmcamiloe';
-        userRepository.findOne.mockReturnValue(undefined);
-        try {
-          await accountsService.findOneByUserName(userName);
         } catch (error) {
           expect(error).toBeInstanceOf(NotFoundException);
         }

@@ -1,73 +1,93 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo_text.svg" width="320" alt="Nest Logo" /></a>
-</p>
+# Movie-rental api
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+API para simular un movie-rental
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+# Importante
 
-## Description
+Es obligatorio correr la primera migración o tener el PG_DUMP para pruebas.
+Para poder probar puedes usar la siguiente colleción de POSTMAN
+https://www.getpostman.com/collections/16e5860b19095d9be1d8
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+import CLI ejemplo: pg_restore -U postgres -d restored_database -1 <file.sql>
 
-## Installation
+### Scripts de ejecución del proyecto
 
-```bash
-$ npm install
-```
+| Funcionalidad     | commando                                                                    |
+| ----------------- | --------------------------------------------------------------------------- |
+| npm start         | Inicia el servidor con ts-node                                              |
+| npm run start:dev | Inicia el servidor en modo watch                                            |
+| npm run migration | Corre la primera migración si el ormconfig conecta satisfactoriamente la DB |
 
-## Running the app
+### headers
 
-```bash
-# development
-$ npm run start
+headers custom
 
-# watch mode
-$ npm run start:dev
+- Content-Type : application/json
+- Authorization : Bearer {token}
 
-# production mode
-$ npm run start:prod
-```
+### Paths
 
-## Test
+### Resources
 
-```bash
-# unit tests
-$ npm run test
+- [Json viewer online](http://jsonviewer.stack.hu/)
 
-# e2e tests
-$ npm run test:e2e
+### Dependencies
 
-# test coverage
-$ npm run test:cov
-```
+- @nestjs-modules/mailer: ^1.5.1,
+- @nestjs/common: ^7.5.1,
+- @nestjs/config: ^0.6.1,
+- @nestjs/core: ^7.5.1,
+- @nestjs/jwt: ^7.2.0,
+- @nestjs/mapped-types: ^0.1.1,
+- @nestjs/passport: ^7.1.5,
+- @nestjs/platform-express: ^7.5.1,
+- @nestjs/schedule: ^0.4.1,
+- @nestjs/typeorm: ^7.1.5,
+- @types/bcrypt: ^3.0.0,
+- bcrypt: ^5.0.0,
+- bull: ^3.20.0,
+- class-transformer: ^0.3.1,
+- class-validator: ^0.12.2,
+- joi: ^17.3.0,
+- moment: ^2.29.1,
+- nodemailer: ^6.4.17,
+- passport: ^0.4.1,
+- passport-jwt: ^4.0.0,
+- pg: ^8.5.1,
+- pug: ^3.0.0,
+- reflect-metadata: ^0.1.13,
+- rimraf: ^3.0.2,
+- rxjs: ^6.6.3,
+- typeorm: ^0.2.29
 
-## Support
+### Dev dependencies
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+- @nestjs/cli: ^7.5.1,
+- @nestjs/schematics: ^7.1.3,
+- @nestjs/testing: ^7.5.1,
+- @types/express: ^4.17.8,
+- @types/jest: ^26.0.15,
+- @types/node: ^14.14.6,
+- @types/passport-jwt: ^3.0.3,
+- @types/supertest: ^2.0.10,
+- @typescript-eslint/eslint-plugin: ^4.6.1,
+- @typescript-eslint/parser: ^4.6.1,
+- eslint: ^7.12.1,
+- eslint-config-prettier: ^6.15.0,
+- eslint-plugin-prettier: ^3.1.4,
+- jest: ^26.6.3,
+- prettier: ^2.1.2,
+- supertest: ^6.0.0,
+- ts-jest: ^26.4.3,
+- ts-loader: ^8.0.8,
+- ts-node: ^9.0.0,
+- tsconfig-paths: ^3.9.0,
+- typescript: ^4.0.5
 
-## Stay in touch
+### Repository
 
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+> [Link to gitlab](https://gitlab.com/gmcamiloe/movie-rental)
 
-## License
+### License
 
-Nest is [MIT licensed](LICENSE).
+- #### [ISC License](https://opensource.org/licenses/ISC)

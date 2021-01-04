@@ -7,7 +7,6 @@ ormconfig.production.json
 ormconfig.development.json
 ormconfig.test.json
 /**/*.env
-src/migrations/**/*
 ormconfig.json
 
 # Logs

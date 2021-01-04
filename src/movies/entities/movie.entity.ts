@@ -31,14 +31,14 @@ export class MovieEntity {
   @Column({ length: 100 })
   trailerLink: string;
 
-  @Column()
+  @Column('decimal', { precision: 5, scale: 2 })
   salePrice: number;
 
   @Column()
   availability: boolean;
 
   @ManyToMany(() => UserEntity, {
-    onDelete: 'SET NULL',
+    onDelete: 'CASCADE',
   })
   @JoinTable()
   @Transform((likes) => likes.length)
