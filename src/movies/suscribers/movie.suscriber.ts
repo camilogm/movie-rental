@@ -18,10 +18,12 @@ export class MovieSuscriber implements EntitySubscriberInterface<MovieEntity> {
   }
 
   async beforeInsert(event: InsertEvent<MovieEntity>) {
-    event.entity.availability = !!event.entity.stock;
+    if (!event.entity.stock || typeof event.entity.availability === 'undefined')
+      event.entity.availability = !!event.entity.stock;
   }
 
   async beforeUpdate(event: UpdateEvent<MovieEntity>) {
-    event.entity.availability = !!event.entity.stock;
+    if (!event.entity.stock || typeof event.entity.availability === 'undefined')
+      event.entity.availability = !!event.entity.stock;
   }
 }

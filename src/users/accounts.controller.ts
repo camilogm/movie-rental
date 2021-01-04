@@ -16,6 +16,7 @@ import { UpdateUserDto } from './dto/user-dtos/update-user.dto';
 import {
   AllowedRoles,
   OverrideAllowedRoles,
+  OwnProfileChanges,
   Public,
   ROLE_ADMIN,
   ROLE_CLIENT,
@@ -47,7 +48,9 @@ export class AccountsController {
   }
 
   @Delete('/me')
+  @OwnProfileChanges()
   @HttpCode(HttpStatus.NO_CONTENT)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   remove(@Req() request) {
     const user: PayloadDTO = request.user;
     return this.accountsService.remove(user.sub);

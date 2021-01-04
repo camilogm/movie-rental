@@ -37,7 +37,7 @@ export class AuthService {
         throw new InternalServerErrorException('Try later');
     }
 
-    throw new UnauthorizedException();
+    throw new UnauthorizedException('Your credentials are wrong');
   }
 
   async login(loginDTO: LoginDTO) {

@@ -74,7 +74,6 @@ export class AccountsService {
 
   async remove(id: number) {
     const user = await this.findOneById(id);
-
     await this.userRepository.remove(user);
 
     return true;

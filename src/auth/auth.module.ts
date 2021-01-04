@@ -6,6 +6,7 @@ import { ENV_CONSTS, MINUTES_EXPIRES_TOKEN } from '../constants';
 import { UsersModule } from '../users/users.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
+import { DeleteTokenTask } from './delete-tokens.task';
 import { TokenEntity } from './entities/token.entity';
 import { JwtStrategy } from './jwt.strategy';
 
@@ -23,8 +24,10 @@ const JWTProvider = JwtModule.registerAsync({
 @Module({
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy],
+  exports: [AuthService],
   imports: [
     UsersModule,
+    DeleteTokenTask,
     ConfigModule,
     JWTProvider,
     TypeOrmModule.forFeature([TokenEntity]),

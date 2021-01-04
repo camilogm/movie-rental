@@ -1,4 +1,13 @@
-import { IsNumber, IsString, IsUrl, Length, Max, Min } from 'class-validator';
+import {
+  IsBoolean,
+  IsNumber,
+  IsOptional,
+  IsString,
+  IsUrl,
+  Length,
+  Max,
+  Min,
+} from 'class-validator';
 
 export class CreateMovieDto {
   @IsString()
@@ -26,4 +35,8 @@ export class CreateMovieDto {
   @Min(1)
   @Max(1000)
   salePrice: number;
+
+  @IsBoolean()
+  @IsOptional()
+  availability?: boolean;
 }

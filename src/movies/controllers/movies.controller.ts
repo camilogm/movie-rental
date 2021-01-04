@@ -38,7 +38,7 @@ export class MoviesController {
   @Get(':id')
   @Public()
   findOne(@Param('id') id: string) {
-    return this.moviesService.findOneById(+id);
+    return this.moviesService.findOneById(+id, false, true);
   }
 
   @Patch(':id')
@@ -52,15 +52,21 @@ export class MoviesController {
     return this.moviesService.remove(+id);
   }
 
+  @Get(':idMovie/tags')
+  @Public()
+  getTags(@Param('idMovie') idMovie: string) {
+    return this.moviesService.getMovieTags(+idMovie);
+  }
+
   @Post(':idMovie/tags/:idTag')
   @HttpCode(HttpStatus.NO_CONTENT)
   addTag(@Param('idMovie') idMovie: string, @Param('idTag') idTag: string) {
     return this.moviesService.addTagToMovie(+idTag, +idMovie);
   }
 
-  @Get(':idMovie/tags')
-  @Public()
-  getTags(@Param('idMovie') idMovie: string) {
-    return this.moviesService.getMovieTags(+idMovie);
+  @Delete(':idMovie/tags/:idTag')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  removeTag(@Param('idMovie') idMovie: string, @Param('idTag') idTag: string) {
+    return this.moviesService.removeTag(+idTag, +idMovie);
   }
 }

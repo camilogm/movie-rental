@@ -148,14 +148,38 @@ export class RentBuyService {
     return detail;
   }
 
-  sendFacture(user: UserEntity, detail: RentBuyEntity, typeOperation: string) {
+  async addLikeToMovie(clientId: number, movieId: number) {
+    const [movie, user] = await Promise.all([
+      this.moviesService.findOneById(movieId, false, true),
+      this.userService.findOneById(clientId),
+    ]);
+
+    movie.likes?.push(user);
+    await this.moviesService.updateByEntity(movie, {});
+    return true;
+  }
+
+  async removeLikeToMovie(clientId: number, movieId: number) {
+    const movie = await this.moviesService.findOneById(movieId, false, true);
+
+    movie.likes = movie.likes?.filter((user) => user.id !== clientId);
+
+    await this.moviesService.updateByEntity(movie, {});
+    return true;
+  }
+
+  async sendFacture(
+    user: UserEntity,
+    detail: RentBuyEntity,
+    typeOperation: string,
+  ) {
     const subject = 'Thanks for prefer us! Transaction completed';
     const description =
       (typeOperation === BUY_OPERATION
         ? 'Purchase of the movie : '
         : 'Rent of the movie : ') + detail?.movie?.title;
 
-    this.mailService.sendMail({
+    await this.mailService.sendMail({
       to: user?.email,
       from: 'noreply@movierental.com',
       subject,

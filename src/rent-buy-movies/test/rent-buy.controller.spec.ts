@@ -339,4 +339,62 @@ describe('rentbuy service', () => {
       });
     });
   }); //end of send mail
+
+  describe('add likes', () => {
+    it('success', async () => {
+      const movieId = '1';
+
+      const data = await rentBuyController.addLikeToMovie(request, movieId);
+      expect(data).toBeTruthy();
+    });
+
+    it('not found exception', async () => {
+      const movieId = '1';
+
+      try {
+        await rentBuyController.addLikeToMovie(request, movieId);
+      } catch (error) {
+        expect(error).toBeInstanceOf(NotFoundException);
+      }
+    });
+
+    it('type error exception', async () => {
+      const movieId = '1';
+      moviesRepository.save.mockReturnValue({});
+      try {
+        await rentBuyController.addLikeToMovie(request, movieId);
+      } catch (error) {
+        expect(error).toBeInstanceOf(TypeError);
+      }
+    });
+  });
+
+  describe('remove like', () => {
+    it('success', async () => {
+      const movieId = '1';
+
+      const data = await rentBuyController.removeLike(request, movieId);
+      expect(data).toBeTruthy();
+    });
+
+    it('not found exception', async () => {
+      const movieId = '1';
+
+      try {
+        await rentBuyController.removeLike(request, movieId);
+      } catch (error) {
+        expect(error).toBeInstanceOf(NotFoundException);
+      }
+    });
+
+    it('type error exception', async () => {
+      const movieId = '1';
+      moviesRepository.save.mockReturnValue({});
+      try {
+        await rentBuyController.removeLike(request, movieId);
+      } catch (error) {
+        expect(error).toBeInstanceOf(TypeError);
+      }
+    });
+  });
 });

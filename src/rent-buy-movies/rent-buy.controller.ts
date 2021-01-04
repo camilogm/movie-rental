@@ -1,9 +1,11 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
+  Param,
   Post,
   Req,
 } from '@nestjs/common';
@@ -55,5 +57,19 @@ export class RentBuyController {
   buyRentedMovie(@Req() request) {
     const user: PayloadDTO = request.user;
     return this.rentBuyService.buyRentedMovie(user.sub);
+  }
+
+  @Post('/like/:movieId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  addLikeToMovie(@Req() request, @Param('movieId') movieId: string) {
+    const user: PayloadDTO = request.user;
+    return this.rentBuyService.addLikeToMovie(user.sub, +movieId);
+  }
+
+  @Delete('/like/:movieId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  removeLike(@Req() request, @Param('movieId') movieId: string) {
+    const user: PayloadDTO = request.user;
+    return this.rentBuyService.removeLikeToMovie(user.sub, +movieId);
   }
 }

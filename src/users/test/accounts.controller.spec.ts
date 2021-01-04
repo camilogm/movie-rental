@@ -188,6 +188,7 @@ describe('UsersService', () => {
     describe('removed sucess user', () => {
       it('removed client', async () => {
         userRepository.findOne.mockReturnValue({});
+
         const deletedUser = await accountsController.remove(request);
         expect(deletedUser).toBeTruthy();
       });

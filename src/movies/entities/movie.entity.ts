@@ -1,4 +1,4 @@
-import { Exclude } from 'class-transformer';
+import { Transform } from 'class-transformer';
 import {
   Column,
   Entity,
@@ -41,13 +41,14 @@ export class MovieEntity {
     onDelete: 'SET NULL',
   })
   @JoinTable()
+  @Transform((likes) => likes.length)
   likes?: UserEntity[];
 
   @ManyToMany(() => TagEntity, {
     onDelete: 'CASCADE',
   })
   @JoinTable()
-  @Exclude()
+  @Transform((tags: TagEntity[]) => tags?.map((tag) => tag.name))
   tags?: TagEntity[];
 
   @OneToMany(() => RentBuyEntity, (rentBuy) => rentBuy.movie, {

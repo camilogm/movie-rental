@@ -44,15 +44,16 @@ const MockedReflector: Reflector = {
   getAllAndOverride: jest.fn(),
 };
 
+const mockConnection = () => ({
+  transaction: jest.fn(),
+  getRepository: jest.fn(),
+});
+
 describe('Roles guard ', () => {
   let rolesGuard: RolesGuard;
   let connectionMock: Connection;
 
   beforeEach(async () => {
-    const mockConnection = () => ({
-      transaction: jest.fn(),
-    });
-
     const module = await Test.createTestingModule({
       providers: [
         {

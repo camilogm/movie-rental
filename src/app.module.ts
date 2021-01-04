@@ -11,12 +11,14 @@ import { OwnProfileChangesGuard } from './auth/guards/own-profile-changes.guard'
 import { RolesGuard } from './auth/guards/roles.guard';
 import { RentBuyMovieModule } from './rent-buy-movies/rent-buy.module';
 import { MailerModuleConfig } from './mail-config.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
     UsersModule,
     ConfigModule.forRoot(),
     TypeOrmModule.forRoot(),
+    ScheduleModule.forRoot(),
     MoviesModule,
     AuthModule,
     RentBuyMovieModule,

@@ -75,6 +75,27 @@ describe('MoviesService', () => {
         const movie = await moviesController.findOne(id);
         expect(movie).toEqual(expectedMovie);
       });
+
+      describe('otherwise find one', () => {
+        it('found with tags', async () => {
+          const id = '1';
+          const expectedMovie = { tags: [] };
+
+          moviesRepository.findOne.mockReturnValue(expectedMovie);
+          const movie = await moviesService.findOneById(+id, true);
+          expect(movie).toEqual(expectedMovie);
+        });
+
+        it('found with users', async () => {
+          const id = '1';
+
+          const expectedMovie = { users: [] };
+
+          moviesRepository.findOne.mockReturnValue(expectedMovie);
+          const movie = await moviesService.findOneById(+id, false, true);
+          expect(movie).toEqual(expectedMovie);
+        });
+      });
     });
 
     describe('failed find one', () => {
@@ -265,7 +286,7 @@ describe('MoviesService', () => {
         const idTag = '1';
         const idMovie = '1';
 
-        moviesRepository.findOne.mockReturnValue({});
+        moviesRepository.findOne.mockReturnValue({ tags: [] });
         tagsRepository.findOne.mockReturnValue({});
         moviesRepository.save.mockReturnValue({});
         const added = await moviesController.addTag(idTag, idMovie);
@@ -282,6 +303,21 @@ describe('MoviesService', () => {
           await moviesController.addTag(idTag, idMovie);
         } catch (error) {
           expect(error).toBeInstanceOf(NotFoundException);
+        }
+      });
+
+      it('type error', async () => {
+        const idTag = '1';
+        const idMovie = '1';
+
+        moviesRepository.findOne.mockReturnValue({});
+        tagsRepository.findOne.mockReturnValue({});
+        moviesRepository.save.mockReturnValue({});
+
+        try {
+          await moviesController.addTag(idTag, idMovie);
+        } catch (error) {
+          expect(error).toBeInstanceOf(TypeError);
         }
       });
     });
@@ -304,6 +340,34 @@ describe('MoviesService', () => {
       } catch (error) {
         expect(error).toBeInstanceOf(NotFoundException);
       }
+    });
+  });
+
+  describe('remove tag', () => {
+    describe('success', () => {
+      it('removed', async () => {
+        const idTag = '1';
+        const idMovie = '1';
+
+        moviesRepository.findOne.mockReturnValue({});
+        tagsRepository.findOne.mockReturnValue({});
+        moviesRepository.save.mockReturnValue({});
+        const added = await moviesController.removeTag(idTag, idMovie);
+
+        expect(added).toBeTruthy();
+      });
+    });
+
+    describe('failed ', () => {
+      it('failed by notFoundEx', async () => {
+        const idTag = '1';
+        const idMovie = '1';
+        try {
+          await moviesController.addTag(idTag, idMovie);
+        } catch (error) {
+          expect(error).toBeInstanceOf(NotFoundException);
+        }
+      });
     });
   });
 });

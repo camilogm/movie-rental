@@ -27,6 +27,7 @@ export class MoviesService {
   async findSortedAlphabetic() {
     const movies = await this.moviesRepository.find({
       order: { title: 'ASC' },
+      relations: ['likes', 'tags'],
       where: { availability: true },
       select: ['id', 'title', 'poster', 'salePrice'],
     });
@@ -34,10 +35,18 @@ export class MoviesService {
     return movies;
   }
 
-  async findOneById(id: number) {
-    const movie = await this.moviesRepository.findOne(id, {
-      relations: ['tags'],
-    });
+  async findOneById(id: number, addTags = false, addLikes = false) {
+    const relations = [];
+
+    if (addTags) relations.push('tags');
+    if (addLikes) relations.push('likes');
+
+    //if the client ask for relations this method provides
+    const movie = relations.length
+      ? await this.moviesRepository.findOne(id, {
+          relations,
+        })
+      : await this.moviesRepository.findOne(id);
 
     if (!movie) throw new NotFoundException('Not found a movie with that Id');
 
@@ -77,17 +86,26 @@ export class MoviesService {
   }
 
   async addTagToMovie(idTag: number, idMovie: number) {
-    const movie = await this.findOneById(idMovie);
+    const movie = await this.findOneById(idMovie, true);
     const tag = await this.tagsService.findOneById(idTag);
 
-    movie.tags?.push(tag);
+    movie.tags.push(tag);
+    await this.moviesRepository.save(movie);
+
+    return true;
+  }
+
+  async removeTag(idTag: number, idMovie: number) {
+    const movie = await this.findOneById(idMovie, true);
+
+    movie.tags = movie.tags?.filter((tag) => tag.id !== idTag);
     await this.moviesRepository.save(movie);
 
     return true;
   }
 
   async getMovieTags(idMovie: number) {
-    const movie = await this.findOneById(idMovie);
+    const movie = await this.findOneById(idMovie, true);
 
     return movie.tags ? movie.tags : [];
   }
