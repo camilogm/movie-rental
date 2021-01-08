@@ -11,7 +11,6 @@ import {
   USER_ROLES,
 } from '../../common/decorators/authorization.decorator';
 import { Connection } from 'typeorm';
-import { PayloadDTO } from '../dto/payload.dto';
 import { TokenEntity } from '../entities/token.entity';
 
 @Injectable()
@@ -35,12 +34,12 @@ export class RolesGuard implements CanActivate {
     const bearerToken = request.headers.authorization
       .toString()
       .replace('Bearer ', '');
-    await this.checkToken(bearerToken);
+
+    const userRole = await this.getRoleIfTokenExists(bearerToken);
 
     //jwtguard set request.user and contains the user role
-    const user: PayloadDTO = request.user;
 
-    if (allowedRoles.includes(user?.userRole)) return true;
+    if (allowedRoles.includes(userRole)) return true;
 
     throw new ForbiddenException(
       `You don't have access to this resource. Ask to an administrator to get permissions`,
@@ -80,12 +79,15 @@ export class RolesGuard implements CanActivate {
     return rolesMetaData?.length ? rolesMetaData : ALL_ROLES;
   }
 
-  async checkToken(tokenStr: string): Promise<boolean> {
-    const tokenRepository = this.connection.getRepository(TokenEntity);
-    const token = await tokenRepository.findOne({
-      token: tokenStr,
-    });
-    if (token) return true;
+  async getRoleIfTokenExists(tokenStr: string): Promise<string> {
+    const token = await this.connection
+      .createQueryBuilder(TokenEntity, 'tokens')
+      .leftJoinAndSelect('tokens.user', 'user')
+      .leftJoinAndSelect('user.role', 'role')
+      .where('tokens.token = :token', { token: tokenStr })
+      .getOne();
+
+    if (token) return token.user?.role?.name;
 
     throw new ForbiddenException('Invalid token');
   }

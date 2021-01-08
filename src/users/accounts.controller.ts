@@ -23,11 +23,20 @@ import {
   ROLE_SUPER_ADMIN,
 } from '../common/decorators/authorization.decorator';
 import { PayloadDTO } from '../auth/dto/payload.dto';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { changePasswordDTO } from './dto/user-dtos/change-password.dto';
+import { ResetPasswordDTO } from './dto/user-dtos/reset-password.dto';
+import { UpdatePasswordService } from './providers/update-password.service';
 
 @Controller('accounts')
+@ApiTags('Accounts endpoints')
+@ApiBearerAuth()
 @AllowedRoles(ROLE_ADMIN, ROLE_CLIENT)
 export class AccountsController {
-  constructor(private readonly accountsService: AccountsService) {}
+  constructor(
+    private readonly accountsService: AccountsService,
+    private readonly updatePasswordService: UpdatePasswordService,
+  ) {}
 
   @Post()
   @Public()
@@ -42,15 +51,17 @@ export class AccountsController {
   }
 
   @Patch('/me')
+  @ApiOperation({
+    description: 'The use of the field password produces a 400',
+  })
   update(@Req() request, @Body() updateUserDto: UpdateUserDto) {
     const user: PayloadDTO = request.user;
-    return this.accountsService.update(user.sub, updateUserDto);
+    return this.accountsService.updateById(user.sub, updateUserDto);
   }
 
   @Delete('/me')
   @OwnProfileChanges()
   @HttpCode(HttpStatus.NO_CONTENT)
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   remove(@Req() request) {
     const user: PayloadDTO = request.user;
     return this.accountsService.remove(user.sub);
@@ -60,5 +71,33 @@ export class AccountsController {
   @OverrideAllowedRoles(ROLE_SUPER_ADMIN)
   changeRole(@Param('idUser') idUser: string, @Param('idRole') idRole: string) {
     return this.accountsService.updateRole(+idUser, +idRole);
+  }
+
+  @Patch('/change/password')
+  @OwnProfileChanges()
+  @HttpCode(HttpStatus.NO_CONTENT)
+  changePassword(@Req() request, @Body() changePasswordDTO: changePasswordDTO) {
+    const user: PayloadDTO = request.user;
+    return this.updatePasswordService.changePassword(
+      user.sub,
+      changePasswordDTO.newPassword,
+    );
+  }
+
+  @Public()
+  @Get('/reset/password/:username')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  recoveryPassword(@Param('username') username: string) {
+    return this.updatePasswordService.recoveryPassword(username);
+  }
+
+  @Public()
+  @Post('/reset/password/:token')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  resetPassword(
+    @Param('token') token: string,
+    @Body() resetPasswordDTO: ResetPasswordDTO,
+  ) {
+    return this.updatePasswordService.resetPassword(token, resetPasswordDTO);
   }
 }

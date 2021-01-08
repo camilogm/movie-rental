@@ -55,21 +55,23 @@ export class AccountsService {
     return user;
   }
 
-  async update(id: number, updateUserDto: UpdateUserDto) {
+  async updateById(id: number, updateUserDto: UpdateUserDto) {
     const user = await this.findOneById(id);
-
-    const password = updateUserDto.password
-      ? await bcrypt.hash(updateUserDto.password, 10)
-      : user?.password;
 
     const updatedUserData = this.userRepository.create({
       ...user,
       ...updateUserDto,
-      password,
     });
     const updatedUser = await this.userRepository.save(updatedUserData);
 
     return updatedUser;
+  }
+
+  async updateByEntity(user: UserEntity, updateUserDto: UpdateUserDto) {
+    return await this.userRepository.save({
+      ...user,
+      ...updateUserDto,
+    });
   }
 
   async remove(id: number) {

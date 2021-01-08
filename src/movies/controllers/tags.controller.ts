@@ -8,6 +8,7 @@ import {
   Patch,
   Post,
 } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import {
   AllowedRoles,
   ROLE_ADMIN,
@@ -18,6 +19,8 @@ import { UpdateTagDTO } from '../dto/tags-dto/update-tag.dto';
 import { TagsService } from '../providers/tags.service';
 
 @Controller('tags')
+@ApiTags('Tags endpoints')
+@ApiBearerAuth()
 @AllowedRoles(ROLE_SUPER_ADMIN, ROLE_ADMIN)
 export class TagsController {
   constructor(private readonly tagsService: TagsService) {}

@@ -75,7 +75,7 @@ describe('Movie controller', () => {
     const response = await request(app.getHttpServer()).get('/movies');
 
     expect(response.status).toEqual(HttpStatus.OK);
-    expect(response.body).toEqual(await movieService.findSortedAlphabetic());
+    expect(response.body).toEqual(await movieService.findFilterMovies());
   });
 
   it('/GET moviedetail', async () => {

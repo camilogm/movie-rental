@@ -9,11 +9,10 @@ import {
 } from '../../../test/TypeORM.mock';
 import { UpdateTagDTO } from '../dto/tags-dto/update-tag.dto';
 import { NotFoundException } from '@nestjs/common';
-import { TagsController } from '../controllers/tags.controller';
 
 describe('TagsService', () => {
   let tagsRepository: MockRepository;
-  let tagsController: TagsController;
+  let tagsService: TagsService;
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
@@ -24,17 +23,16 @@ describe('TagsService', () => {
           useValue: createMockRepository(),
         },
       ],
-      controllers: [TagsController],
     }).compile();
 
-    tagsController = module.get<TagsController>(TagsController);
+    tagsService = module.get<TagsService>(TagsService);
     tagsRepository = module.get<MockRepository>(getRepositoryToken(TagEntity));
   });
 
   describe('should be defined', () => {
     it('tags service defined', () => {
       expect(tagsRepository).toBeDefined();
-      expect(tagsController).toBeDefined();
+      expect(tagsService).toBeDefined();
     });
   });
 
@@ -51,7 +49,7 @@ describe('TagsService', () => {
         };
 
         tagsRepository.save.mockReturnValue(expectedTag);
-        const tag = await tagsController.create(tagDTO);
+        const tag = await tagsService.create(tagDTO);
         expect(tag).toEqual(expectedTag);
       });
     });
@@ -62,7 +60,7 @@ describe('TagsService', () => {
           name: 'Terror',
         };
         try {
-          await tagsController.create(tagDTO);
+          await tagsService.create(tagDTO);
         } catch (error) {
           expect(error).toBeInstanceOf(TypeError);
         }
@@ -73,9 +71,9 @@ describe('TagsService', () => {
   describe('update one', () => {
     describe('success update', () => {
       it('update by id', async () => {
-        const tagId = '1';
+        const tagId = 1;
         const registeredTag: TagEntity = {
-          id: +tagId,
+          id: tagId,
           name: 'Terror',
         };
 
@@ -90,17 +88,18 @@ describe('TagsService', () => {
 
         tagsRepository.findOne.mockReturnValue(expectedData);
         tagsRepository.save.mockReturnValue(expectedData);
-        const updatedTag = await tagsController.update(tagId, updateDataTag);
+        const updatedTag = await tagsService.update(tagId, updateDataTag);
         expect(updatedTag).toEqual(expectedData);
       });
     });
 
     describe('failed to update', () => {
       it('not found tag', async () => {
-        const tagId = '1';
+        const tagId = 1;
+
         const updateDataTag: UpdateTagDTO = {};
         try {
-          await tagsController.update(tagId, updateDataTag);
+          await tagsService.update(tagId, updateDataTag);
         } catch (error) {
           expect(error).toBeInstanceOf(NotFoundException);
         }
@@ -111,20 +110,20 @@ describe('TagsService', () => {
   describe('remove one', () => {
     describe('success', () => {
       it('removed by id', async () => {
-        const tagId = '1';
+        const tagId = 1;
 
         tagsRepository.findOne.mockReturnValue({});
         tagsRepository.remove.mockReturnValue({});
-        const removed = await tagsController.delete(tagId);
+        const removed = await tagsService.delete(tagId);
         expect(removed).toBeTruthy();
       });
     });
 
     describe('failed to update', () => {
       it('failed', async () => {
-        const tagId = '1';
+        const tagId = 1;
         try {
-          await tagsController.delete(tagId);
+          await tagsService.delete(tagId);
         } catch (error) {
           expect(error).toBeInstanceOf(NotFoundException);
         }

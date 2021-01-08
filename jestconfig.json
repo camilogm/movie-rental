@@ -1,0 +1,40 @@
+{
+    "coveragePathIgnorePatterns": [
+      "src/main.ts",
+      ".task.ts",
+      "dist",
+      "coverage",
+      "node_modules",
+      "src/migrations",
+      "test-config",
+      "interfaces",
+      "jestGlobalMocks.ts",
+      ".module.ts",
+      ".dto.ts",
+      ".entity.ts",
+      ".controller.ts",
+      ".filter.ts",
+      ".decorator.ts",
+      ".guard.ts",
+      ".strategy.ts",
+      ".interceptor.ts",
+      ".suscriber.ts",
+      ".provider.ts",
+      ".constants.ts"
+    ],
+    "moduleFileExtensions": [
+      "js",
+      "json",
+      "ts"
+    ],
+    "rootDir": "src",
+    "testRegex": ".*\\.spec\\.ts$",
+    "transform": {
+      "^.+\\.(t|j)s$": "ts-jest"
+    },
+    "collectCoverageFrom": [
+      "**/*.(t|j)s"
+    ],
+    "coverageDirectory": "../coverage",
+    "testEnvironment": "node"
+}

@@ -11,7 +11,6 @@ import {
 } from '../../../test/TypeORM.mock';
 import { UserEntity } from '../../users/entities/user.entity';
 import { AccountsService } from '../../users/providers/accounts.service';
-import { AuthController } from '../auth.controller';
 import { AuthService } from '../auth.service';
 import { LoginDTO } from '../dto/login.dto';
 import { TokenEntity } from '../entities/token.entity';
@@ -24,7 +23,6 @@ const inputPassword = '12345678';
 
 describe('Auth Service', () => {
   let authService: AuthService;
-  let authController: AuthController;
   let accountsService: AccountsService;
   let tokenMockRepository: MockRepository;
 
@@ -45,11 +43,9 @@ describe('Auth Service', () => {
           useValue: createMockRepository(),
         },
       ],
-      controllers: [AuthController],
     }).compile();
 
     accountsService = module.get<AccountsService>(AccountsService);
-    authController = module.get<AuthController>(AuthController);
     authService = module.get<AuthService>(AuthService);
     tokenMockRepository = module.get<MockRepository>(
       getRepositoryToken(TokenEntity),
@@ -60,7 +56,6 @@ describe('Auth Service', () => {
     expect(authService).toBeDefined();
     expect(tokenMockRepository).toBeDefined();
     expect(accountsService).toBeDefined();
-    expect(authController).toBeDefined();
   });
 
   describe('validate user -> authService', () => {
@@ -114,7 +109,7 @@ describe('Auth Service', () => {
         (await accountsService.findOneByUserName(loginDTO.username)).password =
           registeredUser.password;
 
-        const data = await authController.login(loginDTO);
+        const data = await authService.login(loginDTO);
         expect(data).toBeDefined();
       });
     });
@@ -147,7 +142,7 @@ describe('Auth Service', () => {
           authorization: token,
         },
       };
-      const data = await authController.logout(request);
+      const data = await authService.logout(request);
       expect(data).toBeTruthy();
     });
   });

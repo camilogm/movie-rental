@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ENV_CONSTS, MINUTES_EXPIRES_TOKEN } from '../constants';
+import { ENV_CONSTS, MINUTES_EXPIRES_TOKEN_JWT } from '../constants';
 import { UsersModule } from '../users/users.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
@@ -16,7 +16,7 @@ const JWTProvider = JwtModule.registerAsync({
   useFactory: async (configService: ConfigService) => ({
     secret: configService.get<string>(ENV_CONSTS.JWT_SECRET),
     signOptions: {
-      expiresIn: `${MINUTES_EXPIRES_TOKEN}m`,
+      expiresIn: `${MINUTES_EXPIRES_TOKEN_JWT}m`,
     },
   }),
 });

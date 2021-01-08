@@ -1,7 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { ILike, Repository } from 'typeorm';
 import { CreateMovieDto } from '../dto/movies-dto/create-movie.dto';
+import { FilterMovieDto } from '../dto/movies-dto/filter-movie.dto';
 import { UpdateMovieDto } from '../dto/movies-dto/update-movie.dto';
 import { MovieEntity } from '../entities/movie.entity';
 import { TagsService } from './tags.service';
@@ -24,15 +25,23 @@ export class MoviesService {
     return savedMovie;
   }
 
-  async findSortedAlphabetic() {
-    const movies = await this.moviesRepository.find({
-      order: { title: 'ASC' },
-      relations: ['likes', 'tags'],
-      where: { availability: true },
-      select: ['id', 'title', 'poster', 'salePrice'],
-    });
+  async findFilterMovies(filterMovieDTO: FilterMovieDto) {
+    const { sort, title, availability, tags } = filterMovieDTO;
 
-    return movies;
+    const movies = this.moviesRepository
+      .createQueryBuilder('movies')
+      .leftJoinAndSelect('movies.likes', 'likes')
+      .leftJoinAndSelect('movies.tags', 'tags')
+      .orderBy(sort.value, sort.order)
+      .where({ title: ILike(`%${title}%`) })
+      .andWhere('movies.availability = :availability', { availability });
+
+    if (tags?.length)
+      movies.andWhere('tags.name ILIKE ALL(ARRAY[:...tags])', {
+        tags: tags.map((tag) => `%${tag}%`),
+      });
+
+    return await movies.getMany();
   }
 
   async findOneById(id: number, addTags = false, addLikes = false) {

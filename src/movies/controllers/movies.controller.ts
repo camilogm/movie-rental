@@ -8,6 +8,7 @@ import {
   Patch,
   HttpCode,
   HttpStatus,
+  Query,
 } from '@nestjs/common';
 import { MoviesService } from '../providers/movies.service';
 import { CreateMovieDto } from '../dto/movies-dto/create-movie.dto';
@@ -18,8 +19,12 @@ import {
   ROLE_ADMIN,
   ROLE_SUPER_ADMIN,
 } from '../../common/decorators/authorization.decorator';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { FilterMovieDto } from '../dto/movies-dto/filter-movie.dto';
 
 @Controller('movies')
+@ApiTags('Movie endpoints')
+@ApiBearerAuth()
 @AllowedRoles(ROLE_SUPER_ADMIN, ROLE_ADMIN)
 export class MoviesController {
   constructor(private readonly moviesService: MoviesService) {}
@@ -31,8 +36,8 @@ export class MoviesController {
 
   @Get()
   @Public()
-  findSortedMovies() {
-    return this.moviesService.findSortedAlphabetic();
+  findFilterMovies(@Query() params: FilterMovieDto) {
+    return this.moviesService.findFilterMovies(params);
   }
 
   @Get(':id')

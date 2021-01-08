@@ -9,6 +9,7 @@ import {
   Post,
   Req,
 } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { PayloadDTO } from '../auth/dto/payload.dto';
 import {
   AllowedRoles,
@@ -19,6 +20,8 @@ import { CreateRentBuy } from './dto/create-rent-buy.dto';
 import { RentBuyService } from './providers/rent-buy.service';
 
 @Controller('me/movie')
+@ApiTags('Client interaction with movies')
+@ApiBearerAuth()
 @AllowedRoles(ROLE_CLIENT)
 export class RentBuyController {
   constructor(private readonly rentBuyService: RentBuyService) {}

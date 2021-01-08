@@ -11,8 +11,10 @@ import { AuthService } from './auth.service';
 import { LoginDTO } from './dto/login.dto';
 import { Request } from 'express';
 import { Public } from '../common/decorators/authorization.decorator';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 @Controller('')
+@ApiTags('Auth endpoints')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
@@ -24,6 +26,7 @@ export class AuthController {
   }
 
   @Get('logout')
+  @ApiBearerAuth()
   @HttpCode(HttpStatus.NO_CONTENT)
   async logout(@Req() request: Request) {
     const jwt = request.headers?.authorization

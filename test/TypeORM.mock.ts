@@ -11,4 +11,11 @@ export const createMockRepository = <T = any>(): MockRepository<T> => ({
   remove: jest.fn(),
   create: jest.fn(),
   delete: jest.fn(),
+  createQueryBuilder: jest.fn(() => ({
+    leftJoinAndSelect: jest.fn().mockReturnThis(),
+    orderBy: jest.fn().mockReturnThis(),
+    where: jest.fn().mockReturnThis(),
+    andWhere: jest.fn().mockReturnThis(),
+    getMany: () => [],
+  })),
 });

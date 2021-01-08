@@ -13,20 +13,23 @@ import {
   RENT_OPERATION,
   STATES_MOVIES_PROVIDER,
 } from '../../constants';
+import { CreateRentBuy } from '../dto/create-rent-buy.dto';
 import * as moment from 'moment';
 import { UserEntity } from '../../users/entities/user.entity';
 import { MovieEntity } from '../../movies/entities/movie.entity';
-import {} from '@nestjs/common';
-import { RentBuyController } from '../rent-buy.controller';
+import { ConflictException, NotFoundException } from '@nestjs/common';
 import { MailerService } from '@nestjs-modules/mailer';
+
+const clientId = 1;
+const movieId = 1;
 
 describe('rentbuy service', () => {
   let rentBuyService: RentBuyService;
   let rentBuyMockRepository: MockRepository;
+  let moviesRepository: MockRepository;
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
-      controllers: [RentBuyController],
       providers: [
         {
           provide: MailerService,
@@ -65,6 +68,9 @@ describe('rentbuy service', () => {
     }).compile();
 
     rentBuyService = module.get<RentBuyService>(RentBuyService);
+    moviesRepository = module.get<MockRepository>(
+      getRepositoryToken(MovieEntity),
+    );
     rentBuyMockRepository = module.get<MockRepository>(
       getRepositoryToken(RentBuyEntity),
     );
@@ -73,12 +79,12 @@ describe('rentbuy service', () => {
   it('should be defined', () => {
     expect(rentBuyService).toBeDefined();
     expect(rentBuyMockRepository).toBeDefined();
+    expect(moviesRepository).toBeDefined();
   });
 
   describe('find rented movie', () => {
     describe('success found op', () => {
       it('found movie rented by clientId', async () => {
-        const clientId = 1;
         const rentedMovieExpected = {};
 
         rentBuyMockRepository.findOne.mockReturnValue(rentedMovieExpected);
@@ -90,7 +96,6 @@ describe('rentbuy service', () => {
       });
 
       it(`client doesn't have rented movie`, async () => {
-        const clientId = 1;
         const rentedMovieExpected = undefined;
 
         rentBuyMockRepository.findOne.mockReturnValue(rentedMovieExpected);
@@ -104,7 +109,6 @@ describe('rentbuy service', () => {
 
     describe('failed success found', () => {
       it('throw type error ', async () => {
-        const clientId = 1;
         try {
           await rentBuyService.getMovieRentedByClientId(clientId);
         } catch (error) {
@@ -147,6 +151,142 @@ describe('rentbuy service', () => {
       expect(data).toEqual(expectedData);
     });
   }); //end of check data
+
+  describe('buy or rent movie', () => {
+    describe('success ', () => {
+      it('rent movie', async () => {
+        const rentMovieDTo: CreateRentBuy = {
+          movieId: 1,
+        };
+
+        const expectedData = { movie: {} };
+
+        rentBuyMockRepository.create.mockReturnValue(expectedData);
+        rentBuyMockRepository.save.mockReturnValue(expectedData);
+        const data = await rentBuyService.rentBuyTransaction(
+          clientId,
+          rentMovieDTo,
+          RENT_OPERATION,
+        );
+
+        expect(data).toEqual(expectedData);
+      });
+
+      it('buy movie', async () => {
+        const rentMovieDTO: CreateRentBuy = {
+          movieId: 1,
+        };
+        const expectedData = { movie: {} };
+
+        rentBuyMockRepository.create.mockReturnValue(expectedData);
+        rentBuyMockRepository.save.mockReturnValue(expectedData);
+        const data = await rentBuyService.rentBuyTransaction(
+          clientId,
+          rentMovieDTO,
+          BUY_OPERATION,
+        );
+        expect(data).toEqual(expectedData);
+      });
+    });
+
+    describe('failed buy/rent', () => {
+      it('throw typeError', async () => {
+        try {
+          //Uses RENT_OPERATION or BUY_OPERATION is complety arbitrary for the test
+          // is the same for both use cases
+          await rentBuyService.rentBuyTransaction(
+            clientId,
+            {
+              movieId: 1,
+            },
+            RENT_OPERATION,
+          );
+        } catch (error) {
+          expect(error).toBeInstanceOf(TypeError);
+        }
+      });
+
+      it('throw notFoundException', async () => {
+        const rentMovieDTo: CreateRentBuy = {
+          movieId: 1,
+        };
+        const expectedData = { movie: {} };
+
+        moviesRepository.save.mockReturnValue({});
+        rentBuyMockRepository.create.mockReturnValue(expectedData);
+        rentBuyMockRepository.save.mockReturnValue(expectedData);
+        try {
+          //Uses RENT_OPERATION or BUY_OPERATION is complety arbitrary for the test
+          // is the same for both use cases
+
+          await rentBuyService.rentBuyTransaction(
+            clientId,
+            rentMovieDTo,
+            BUY_OPERATION,
+          );
+        } catch (error) {
+          expect(error).toBeInstanceOf(NotFoundException);
+        }
+      });
+    });
+  }); // end of buy/rent operation
+
+  describe('return or buy rented movie', () => {
+    describe('success', () => {
+      it('return the movie', async () => {
+        //must have a movie defined
+        const expectedData = {
+          movie: {},
+        };
+
+        rentBuyMockRepository.findOne.mockReturnValue(expectedData);
+        rentBuyMockRepository.save.mockReturnValue(expectedData);
+        const data = await rentBuyService.returnRentedMovie(clientId);
+
+        expect(data).toEqual(expectedData);
+      });
+    });
+
+    it('buy the movie', async () => {
+      //must have a movie defined
+      const expectedData = {
+        movie: {},
+      };
+
+      rentBuyMockRepository.findOne.mockReturnValue(expectedData);
+      rentBuyMockRepository.create.mockReturnValue(expectedData);
+      rentBuyMockRepository.save.mockReturnValue(expectedData);
+      const data = await rentBuyService.buyRentedMovie(clientId);
+
+      expect(data).toEqual(expectedData);
+    });
+  });
+
+  describe('failed', () => {
+    it('throw typeError', async () => {
+      const expectedData = { movie: {} };
+
+      try {
+        // the use of return or buy operation is complety arbistrary
+        // is the same for both use cases
+        rentBuyMockRepository.findOne.mockReturnValue(expectedData);
+        await rentBuyService.buyRentedMovie(clientId);
+      } catch (error) {
+        expect(error).toBeInstanceOf(TypeError);
+      }
+    });
+
+    it('throw Conflict', async () => {
+      try {
+        // the use of return or buy operation is complety arbistrary
+        // is the same for both use cases
+        rentBuyMockRepository.findOne.mockReturnValue(undefined);
+        await rentBuyService.returnRentedMovie(clientId);
+      } catch (error) {
+        expect(error).toBeInstanceOf(ConflictException);
+      }
+    });
+  }); //end of return or buy a rented movie
 
   describe('send facture', () => {
     describe('success', () => {
@@ -194,4 +334,52 @@ describe('rentbuy service', () => {
       });
     });
   }); //end of send mail
+
+  describe('add likes', () => {
+    it('success', async () => {
+      const data = await rentBuyService.addLikeToMovie(clientId, movieId);
+      expect(data).toBeTruthy();
+    });
+
+    it('not found exception', async () => {
+      try {
+        await rentBuyService.addLikeToMovie(clientId, movieId);
+      } catch (error) {
+        expect(error).toBeInstanceOf(NotFoundException);
+      }
+    });
+
+    it('type error exception', async () => {
+      moviesRepository.save.mockReturnValue({});
+      try {
+        await rentBuyService.addLikeToMovie(clientId, movieId);
+      } catch (error) {
+        expect(error).toBeInstanceOf(TypeError);
+      }
+    });
+  });
+
+  describe('remove like', () => {
+    it('success', async () => {
+      const data = await rentBuyService.removeLikeToMovie(clientId, movieId);
+      expect(data).toBeTruthy();
+    });
+
+    it('not found exception', async () => {
+      try {
+        await rentBuyService.removeLikeToMovie(clientId, movieId);
+      } catch (error) {
+        expect(error).toBeInstanceOf(NotFoundException);
+      }
+    });
+
+    it('type error exception', async () => {
+      moviesRepository.save.mockReturnValue({});
+      try {
+        await rentBuyService.removeLikeToMovie(clientId, movieId);
+      } catch (error) {
+        expect(error).toBeInstanceOf(TypeError);
+      }
+    });
+  });
 });
