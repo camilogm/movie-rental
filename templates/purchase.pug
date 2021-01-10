@@ -5,83 +5,52 @@ html(lang="en")
         meta(name="viewport", content="width=device-width, initial-scale=1.0")
     body
         container
-            .col-md-12
-            .invoice
-            .invoice-company.text-inverse.f-w-600
-                span.pull-right.hidden-print
-                            Company Name, Inc
-            // end invoice-company
-            // begin invoice-header
-            .invoice-header
-                .invoice-from
-                small from
-                address.m-t-5.m-b-5
-                    strong.text-inverse Twitter, Inc.
-                    br
-                    |                   Street Address
-                    br
-                    |                   City, Zip Code
-                    br
-                    |                   Phone: (123) 456-7890
-                    br
-                    |                   Fax: (123) 456-7890
-                .invoice-to
-                small to
-                address.m-t-5.m-b-5
-                    strong.text-inverse Company Name
-                    br
-                    |                   Street Address
-                    br
-                    |                   City, Zip Code
-                    br
-                    |                   Phone: (123) 456-7890
-                    br
-                    |                   Fax: (123) 456-7890
-                .invoice-date
-                small Invoice  
-                    .date.text-inverse.m-t-5 #{detail.transactionDate}
-                    .invoice-detail
-                        |#{detail.id}
-                        br
-                        |                   Movie            
-            .invoice-content         
-                p
-                    | Client : #{user.firstName}  #{user.lastName}
-                    | email : #{user.email}
-                    | Invoice: #{detail.id}
-                .table-responsive
-                    table.table.table-invoice
-                        thead
-                        tr
-                            th TRANSACTION DESCRIPTION
-                            th.text-center(width='10%') PRICE
-                            th.text-right(width='20%') TOTAL
-                        tbody
-                        tr
-                            td
-                                span.text-inverse #{description}                                                                   
-                            td.text-center #{detail.price}
-                            td.text-right #{detail.price}                
-                .invoice-price
-                    .invoice-price-left
-                        .invoice-price-row
-                        .sub-price
-                            small SUBTOTAL 
-                            span.text-inverse #{detail.price}              
-                .invoice-price-right
-                    small TOTAL 
-                    span.f-w-600 #{detail.price}     
-            .invoice-note
-                | * Make the payment by a credit card
+            div
+                table
+                    thead
+                    tr
+                        th Client
+                        th email
+                        th Date
+                        th Invoice number
+                    tbody
+                        td.text-center #{user.firstName}  #{user.lastName}
+                        td.text-center #{user.email}
+                        td.text-center #{invoice.transactionDate} 
+                        td.text-center #{invoice.id}      
                 br
-                |             * If you have any questions concerning this invoice, contact  [Name, Phone Number, Email]
-            // end invoice-note
-            // begin invoice-footer
-            .invoice-footer
-                p.text-center.m-b-5.f-w-600
-                    | THANK YOU FOR PREFER US
-                p.text-center
-                    span.m-r-10
-                        i.fa.fa-fw.fa-lg.
-
+                br 
+                table
+                    thead
+                    tr
+                        th TRANSACTION DESCRIPTION
+                        th Quantity
+                        th Unitary Price
+                        th Limit date
+                        th TOTAL
+                    tbody
+                        if boughtDetails
+                            each detail in boughtDetails
+                                tr
+                                    td.text-center  Purchase of  #{detail.movie.title}                                                                   
+                                    td.text-center #{detail.quantity}
+                                    td.text-center #{detail.movie.salePrice}
+                                    td.text-center --
+                                    td.text-center #{detail.price.toFixed(2)}
+                        if rentDetails
+                            each detail in rentDetails
+                                tr
+                                    td.text-center  Rent of  #{detail.movie.title}                                                                   
+                                    td.text-center #{detail.quantity}
+                                    td.text-center #{(detail.movie.salePrice * 0.1)}
+                                    td.text-center #{detail.returnDate}
+                                    td.text-right #{detail.price.toFixed(2)}                     
+            div
+                small TOTAL 
+                span.f-w-600 #{invoice.total.toFixed(2)}     
+            div
+                li
+                    ul Make the payment by a credit card
+            div
+                p THANK YOU FOR PREFER US            
                         

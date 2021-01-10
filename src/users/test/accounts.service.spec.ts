@@ -24,15 +24,13 @@ const user: CreateUserDto = {
 describe('Accounts service', () => {
   let accountsService: AccountsService;
   let userRepository: MockRepository;
-  let rolesProvider: RolesDTO;
+  let rolesProvider: RolesDTO = new RolesDTO(
+    new RoleEntity(1, 'SUPERADMIN'),
+    new RoleEntity(2, 'ADMIN'),
+    new RoleEntity(3, 'CLIENT'),
+  );
 
   beforeEach(async () => {
-    const roles = new RolesDTO(
-      new RoleEntity(1, 'SUPERADMIN'),
-      new RoleEntity(2, 'ADMIN'),
-      new RoleEntity(3, 'CLIENT'),
-    );
-
     const module = await Test.createTestingModule({
       providers: [
         AccountsService,
@@ -40,7 +38,7 @@ describe('Accounts service', () => {
           provide: getRepositoryToken(UserEntity),
           useValue: createMockRepository(),
         },
-        { provide: ROLES_PROVIDER, useValue: roles },
+        { provide: ROLES_PROVIDER, useValue: rolesProvider },
       ],
     }).compile();
 
@@ -85,13 +83,33 @@ describe('Accounts service', () => {
         }
       });
 
+      it(`by userId throws TypeORM`, async () => {
+        const id = 1;
+        userRepository.findOne.mockReturnValue({});
+        try {
+          await accountsService.findOneById(id);
+        } catch (error) {
+          expect(error).toBeInstanceOf(TypeError);
+        }
+      });
+
       it(`must throw when the username doesn't exist`, async () => {
         const userName = 'gmcamiloe';
-        userRepository.findOne.mockReturnValue(undefined);
+        userRepository.findOne.mockReturnValue({});
         try {
           await accountsService.findOneByUserName(userName);
         } catch (error) {
           expect(error).toBeInstanceOf(NotFoundException);
+        }
+      });
+
+      it(`by userName throws TypeORM`, async () => {
+        const username = 'gmcamiloe';
+        userRepository.findOne.mockReturnValue({});
+        try {
+          await accountsService.findOneByUserName(username);
+        } catch (error) {
+          expect(error).toBeInstanceOf(TypeError);
         }
       });
     });
@@ -126,35 +144,39 @@ describe('Accounts service', () => {
   }); //end of create one
 
   describe('updateOne', () => {
+    const id = 1;
+
+    const registeredUser: UserEntity = {
+      id: 1,
+      ...user,
+      role: rolesProvider.CLIENT,
+    };
+
+    const updateUserDTO: UpdateUserDto = {
+      firstName: 'Juan',
+    };
+
+    const expectedData = {
+      ...registeredUser,
+      ...updateUserDTO,
+    };
+
     describe('success edit account', () => {
-      it('updated account client', async () => {
-        const id = '1';
-
-        const registeredUser = {
-          id,
-          userName: 'gmcamiloe',
-          firstName: 'Camilo',
-          lastName: 'Gonzalez',
-          role: rolesProvider.CLIENT,
-        };
-
-        const updatedUserData: UpdateUserDto = {
-          firstName: 'Juan',
-        };
-
-        const expectedData = {
-          ...registeredUser,
-          ...updatedUserData,
-        };
-
+      it('updated account client by id', async () => {
         userRepository.findOne.mockReturnValue(expectedData);
         userRepository.save.mockReturnValue(expectedData);
-        const userUpdated = await accountsService.updateById(
-          Number(id),
-          updatedUserData,
-        );
+        const data = await accountsService.updateById(id, updateUserDTO);
 
-        expect(userUpdated).toEqual(expectedData);
+        expect(data).toEqual(expectedData);
+      });
+
+      it('update by userEntity', async () => {
+        userRepository.save.mockReturnValue(expectedData);
+        const data = await accountsService.updateByEntity(
+          registeredUser,
+          updateUserDTO,
+        );
+        expect(data).toEqual(expectedData);
       });
     });
 

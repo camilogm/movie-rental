@@ -4,18 +4,19 @@ import { Transform } from 'class-transformer';
 import { IsArray, IsBoolean, IsOptional, IsString } from 'class-validator';
 import { IsInCustomSort } from '../../../common/decorators/is-in-custom.decorator';
 
+const transformSortInput = (inputValue: string) => {
+  const order = inputValue[0] === '-' ? 'DESC' : 'ASC';
+  const value = inputValue.substring(1, inputValue.length);
+  return {
+    value,
+    order,
+  };
+};
+
 export class FilterMovieDto {
   @IsOptional()
   @IsInCustomSort('sort', ['title', 'likes'])
-  @Transform((inputValue: string) => {
-    const order = inputValue[0] === '-' ? 'DESC' : 'ASC';
-
-    const value = inputValue.substring(1, inputValue.length);
-    return {
-      value,
-      order,
-    };
-  })
+  @Transform(transformSortInput)
   @ApiProperty({ required: false, format: 'string', default: '' })
   sort: { value: string; order: 'ASC' | 'DESC' } = {
     value: 'title',

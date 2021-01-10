@@ -1,6 +1,5 @@
 import { Exclude, Expose, Transform } from 'class-transformer';
 import { TokenEntity } from '../../auth/entities/token.entity';
-import { RentBuyEntity } from '../../rent-buy-movies/entities/rent-buy.entity';
 import {
   Column,
   Entity,
@@ -9,6 +8,7 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { RoleEntity } from './role.entity';
+import { InvoiceEntity } from '../../rent-buy-movies/entities/invoice.entity';
 
 @Entity('users')
 export class UserEntity {
@@ -46,8 +46,8 @@ export class UserEntity {
   })
   tokens?: TokenEntity[];
 
-  @OneToMany(() => RentBuyEntity, (rentBuy) => rentBuy.user, {
+  @OneToMany(() => InvoiceEntity, (invoice) => invoice.user, {
     onDelete: 'SET NULL',
   })
-  rentBuy?: RentBuyEntity[];
+  invoices?: InvoiceEntity[];
 }

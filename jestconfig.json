@@ -20,7 +20,8 @@
       ".interceptor.ts",
       ".suscriber.ts",
       ".provider.ts",
-      ".constants.ts"
+      ".constants.ts",
+      ".define.ts"
     ],
     "moduleFileExtensions": [
       "js",

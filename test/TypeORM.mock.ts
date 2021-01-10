@@ -4,6 +4,17 @@ export type MockRepository<T = any> = Partial<
   Record<keyof Repository<T>, jest.Mock>
 >;
 
+export const mockQueryBuilder = jest.fn(() => ({
+  leftJoinAndSelect: jest.fn().mockReturnThis(),
+  orderBy: jest.fn().mockReturnThis(),
+  where: jest.fn().mockReturnThis(),
+  andWhere: jest.fn().mockReturnThis(),
+  getMany: () => [],
+  getOne: () => {
+    return {};
+  },
+}));
+
 export const createMockRepository = <T = any>(): MockRepository<T> => ({
   findOne: jest.fn(),
   save: jest.fn(),
@@ -11,11 +22,5 @@ export const createMockRepository = <T = any>(): MockRepository<T> => ({
   remove: jest.fn(),
   create: jest.fn(),
   delete: jest.fn(),
-  createQueryBuilder: jest.fn(() => ({
-    leftJoinAndSelect: jest.fn().mockReturnThis(),
-    orderBy: jest.fn().mockReturnThis(),
-    where: jest.fn().mockReturnThis(),
-    andWhere: jest.fn().mockReturnThis(),
-    getMany: () => [],
-  })),
+  createQueryBuilder: mockQueryBuilder,
 });

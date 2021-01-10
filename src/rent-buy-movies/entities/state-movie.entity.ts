@@ -1,5 +1,5 @@
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
-import { RentBuyEntity } from './rent-buy.entity';
+import { InvoiceDetailEntity } from './invoice-detail.entity';
 
 /**
  * could be rent/buy/delayed
@@ -15,6 +15,11 @@ export class StateMovieEntity {
   })
   name: string;
 
-  @OneToMany(() => RentBuyEntity, (rentBuy) => rentBuy.state)
-  rentBuy?: RentBuyEntity[];
+  @OneToMany(() => InvoiceDetailEntity, (rentBuy) => rentBuy.state)
+  rentBuy?: InvoiceDetailEntity[];
+
+  constructor(id: number, name: string) {
+    this.id = id;
+    this.name = name;
+  }
 }

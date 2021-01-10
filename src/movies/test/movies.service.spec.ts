@@ -210,6 +210,14 @@ describe('MoviesService', () => {
         );
         expect(data).toEqual(expectedData);
       });
+
+      it('udpate many', async () => {
+        const expectedData = [];
+        moviesRepository.save.mockReturnValue(expectedData);
+
+        const data = await moviesService.updateManyByEntity([]);
+        expect(data).toEqual(expectedData);
+      });
     });
 
     describe('failed update by id', () => {
@@ -225,7 +233,7 @@ describe('MoviesService', () => {
         }
       });
 
-      it('failed TypeErorr', async () => {
+      it('failed TypeErorr byId', async () => {
         const movieId = 1;
         const updateDTO: UpdateMovieDto = {};
         moviesRepository.findOne.mockReturnValue({});
@@ -252,6 +260,19 @@ describe('MoviesService', () => {
         moviesRepository.save.mockReturnValue({});
         try {
           await moviesService.updateByEntity(movieRegistered, updateData);
+        } catch (error) {
+          expect(error).toBeInstanceOf(TypeError);
+        }
+      });
+    });
+
+    describe('failed update many by entity', () => {
+      it('throw typeError', async () => {
+        const expectedData = [];
+        moviesRepository.save.mockReturnValue(expectedData);
+
+        try {
+          await moviesService.updateManyByEntity([]);
         } catch (error) {
           expect(error).toBeInstanceOf(TypeError);
         }

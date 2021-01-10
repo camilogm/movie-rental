@@ -125,9 +125,24 @@ describe('Auth Service', () => {
           registeredUser.password;
 
         try {
+          await authService.login(loginDTO);
         } catch (error) {
           expect(error).toBeInstanceOf(UnauthorizedException);
         }
+      });
+
+      it('internal error', async () => {
+        const loginDTO: LoginDTO = {
+          username: 'gm',
+          password: `${inputPassword}incorrectaExtra`,
+        };
+
+        (await accountsService.findOneByUserName(loginDTO.username)).password =
+          registeredUser.password;
+
+        try {
+          await authService.login(loginDTO);
+        } catch (error) {}
       });
     });
   });
@@ -137,13 +152,20 @@ describe('Auth Service', () => {
       const token = '';
 
       tokenMockRepository.findOne.mockReturnValue({});
-      const request: any = {
-        headers: {
-          authorization: token,
-        },
-      };
-      const data = await authService.logout(request);
+      const data = await authService.logout(token);
       expect(data).toBeTruthy();
+    });
+
+    it('throw find token', async () => {
+      const token = '';
+
+      tokenMockRepository.findOne.mockReturnValue({});
+
+      try {
+        await authService.logout(token);
+      } catch (error) {
+        expect(error).toBeInstanceOf(TypeError);
+      }
     });
   });
 });

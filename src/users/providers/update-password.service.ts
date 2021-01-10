@@ -1,4 +1,3 @@
-import { MailerService } from '@nestjs-modules/mailer';
 import {
   GoneException,
   Injectable,
@@ -13,6 +12,7 @@ import { v4 as uuid } from 'uuid';
 import { ResetPasswordDTO } from '../dto/user-dtos/reset-password.dto';
 import * as bcrypt from 'bcrypt';
 import { MINUTES_EXPIRES_TOKEN_RECOVERY_PASSWORD } from '../../constants';
+import { MailerCustomService } from '../../mailer/mailer.service';
 
 @Injectable()
 export class UpdatePasswordService {
@@ -20,12 +20,12 @@ export class UpdatePasswordService {
     private readonly accountsService: AccountsService,
     @InjectRepository(TokenPasswordEntity)
     private readonly tokenPasswordRepository: Repository<TokenPasswordEntity>,
-    private readonly mailService: MailerService,
+    private readonly mailService: MailerCustomService,
   ) {}
 
-  async changePassword(id: number, newPassword: string) {
+  async changePassword(idUser: number, newPassword: string) {
     const [user, password] = await Promise.all([
-      this.accountsService.findOneById(id),
+      this.accountsService.findOneById(idUser),
       bcrypt.hash(newPassword, 10),
     ]);
 
@@ -45,7 +45,7 @@ export class UpdatePasswordService {
       )
       .getOne();
 
-    const getUser = currentRecoveryToken
+    const promiseUser = currentRecoveryToken
       ? currentRecoveryToken.user
       : this.accountsService.findOneByUserName(userName);
 
@@ -53,23 +53,22 @@ export class UpdatePasswordService {
       ? this.tokenPasswordRepository.remove(currentRecoveryToken)
       : null;
 
-    const [user] = await Promise.all([getUser, deleteCurrentToken]);
+    const [user] = await Promise.all([promiseUser, deleteCurrentToken]);
 
+    console.log(user);
     const newPasswordToken = await this.tokenPasswordRepository.save({
       createAt: moment().format(),
       token: uuid(),
       user,
     });
 
-    await this.mailService.sendMail({
+    return await this.mailService.sendMail({
       to: user.email,
       from: 'no-reply',
       subject: 'Recovery password',
       template: 'recovery-password',
       context: { token: newPasswordToken.token },
     });
-
-    return true;
   }
 
   async resetPassword(tokenStr: string, resetPasswordDTO: ResetPasswordDTO) {

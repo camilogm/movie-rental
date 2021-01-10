@@ -10,7 +10,7 @@ import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { OwnProfileChangesGuard } from './auth/guards/own-profile-changes.guard';
 import { RolesGuard } from './auth/guards/roles.guard';
 import { RentBuyMovieModule } from './rent-buy-movies/rent-buy.module';
-import { MailerModuleConfig } from './mail-config.module';
+import { MailerModule } from './mailer/mailer.module';
 import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
@@ -22,7 +22,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     MoviesModule,
     AuthModule,
     RentBuyMovieModule,
-    MailerModuleConfig,
+    MailerModule,
   ],
   controllers: [],
   providers: [

@@ -5,4 +5,16 @@ export class StateMoviesDTO {
   BUY: StateMovieEntity;
   DELAYED: StateMovieEntity;
   RETURNED: StateMovieEntity;
+
+  constructor(
+    RENT: StateMovieEntity,
+    BUY: StateMovieEntity,
+    DELAYED: StateMovieEntity,
+    RETURNED: StateMovieEntity,
+  ) {
+    this.RENT = RENT;
+    this.BUY = BUY;
+    this.DELAYED = DELAYED;
+    this.RETURNED = RETURNED;
+  }
 }

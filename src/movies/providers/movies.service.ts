@@ -57,7 +57,8 @@ export class MoviesService {
         })
       : await this.moviesRepository.findOne(id);
 
-    if (!movie) throw new NotFoundException('Not found a movie with that Id');
+    if (!movie)
+      throw new NotFoundException(`Not found a movie with  the id : ${id}`);
 
     return movie;
   }
@@ -84,6 +85,10 @@ export class MoviesService {
     });
 
     return updatedMovie;
+  }
+
+  async updateManyByEntity(movies: MovieEntity[]) {
+    return await this.moviesRepository.save(movies);
   }
 
   async remove(id: number) {

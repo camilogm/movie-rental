@@ -8,7 +8,7 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { UserEntity } from '../../users/entities/user.entity';
-import { RentBuyEntity } from '../../rent-buy-movies/entities/rent-buy.entity';
+import { InvoiceDetailEntity } from '../../rent-buy-movies/entities/invoice-detail.entity';
 import { TagEntity } from './tag.entity';
 
 @Entity('movies')
@@ -51,8 +51,8 @@ export class MovieEntity {
   @Transform((tags: TagEntity[]) => tags?.map((tag) => tag.name))
   tags?: TagEntity[];
 
-  @OneToMany(() => RentBuyEntity, (rentBuy) => rentBuy.movie, {
+  @OneToMany(() => InvoiceDetailEntity, (detail) => detail.movie, {
     onDelete: 'SET NULL',
   })
-  rentBuy?: RentBuyEntity[];
+  invoiceDetail?: InvoiceDetailEntity[];
 }

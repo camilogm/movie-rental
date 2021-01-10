@@ -1,153 +1,153 @@
-import { ConflictException, Inject, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Inject,
+  Injectable,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { AccountsService } from '../../users/providers/accounts.service';
 import { Repository } from 'typeorm';
-import { CreateRentBuy } from '../dto/create-rent-buy.dto';
-import { RentBuyEntity } from '../entities/rent-buy.entity';
+import { RentMovieDTO } from '../dto/rent.dto/rent-movie.dto';
+import { InvoiceDetailEntity } from '../entities/invoice-detail.entity';
 import { MoviesService } from '../../movies/providers/movies.service';
 import * as moment from 'moment';
-import { BUY_OPERATION, STATES_MOVIES_PROVIDER } from '../../constants';
+import {
+  BUY_OPERATION,
+  RENT_OPERATION,
+  STATES_MOVIES_PROVIDER,
+} from '../../constants';
 import { StateMoviesDTO } from '../dto/state-movies.dto';
-import { UserEntity } from '../../users/entities/user.entity';
-import { MailerService } from '@nestjs-modules/mailer';
+import { InvoiceEntity } from '../entities/invoice.entity';
+import { BuyMovieDTO } from '../dto/buy-dto/buy-a-movie.dto';
+import { plainToClass } from 'class-transformer';
+import { MailerCustomService } from '../../mailer/mailer.service';
 
 @Injectable()
 export class RentBuyService {
   constructor(
-    private readonly mailService: MailerService,
+    private readonly mailService: MailerCustomService,
     private readonly userService: AccountsService,
     private readonly moviesService: MoviesService,
-    @InjectRepository(RentBuyEntity)
-    private readonly rentBuyRepository: Repository<RentBuyEntity>,
+    @InjectRepository(InvoiceDetailEntity)
+    private readonly invoiceDetailRepository: Repository<InvoiceDetailEntity>,
+    @InjectRepository(InvoiceEntity)
+    private readonly invoiceRepository: Repository<InvoiceEntity>,
     @Inject(STATES_MOVIES_PROVIDER)
     private readonly stateMovies: StateMoviesDTO,
   ) {}
 
-  getBuyRentData(salePrice: number, daysRent: number, typeOperation: string) {
-    //this allows to know wich operations is implemented /BUY or /RENT
-    const state =
-      typeOperation === BUY_OPERATION
-        ? this.stateMovies.BUY
-        : this.stateMovies.RENT;
+  async builderDetail(rentMovieDTO: RentMovieDTO, typeOperation: string) {
+    const movie = await this.moviesService.findOneById(rentMovieDTO.movieId);
 
+    const enoughStock = movie.stock >= rentMovieDTO.quantity;
+    const isBuyOperation = typeOperation === BUY_OPERATION;
+
+    if (!enoughStock)
+      throw new ConflictException(
+        `There are not enough stock for the movie ${movie?.title} with id ${movie?.id}`,
+      );
+
+    const daysRent = isBuyOperation ? null : rentMovieDTO.daysRent;
+
+    const state = isBuyOperation ? this.stateMovies.BUY : this.stateMovies.RENT;
     const price =
-      typeOperation === BUY_OPERATION ? salePrice : salePrice * 0.1 * daysRent;
+      (isBuyOperation ? movie.salePrice : movie.salePrice * 0.1 * daysRent) *
+      rentMovieDTO.quantity;
 
-    const returnDate =
-      typeOperation === BUY_OPERATION
-        ? null
-        : moment().add(daysRent, 'days').format();
+    const returnDate = isBuyOperation
+      ? null
+      : moment().add(daysRent, 'days').format();
 
-    return {
+    return this.invoiceDetailRepository.create({
+      movie,
+      state,
       price,
       returnDate,
-      state,
+      quantity: rentMovieDTO.quantity,
+    });
+  }
+
+  async invoiceDetailsBuilder(
+    moviesDetail: RentMovieDTO[],
+    typeOperation: string,
+  ) {
+    if (!moviesDetail?.length)
+      return {
+        details: [],
+        subTotal: 0,
+      };
+
+    const detailsPromise = moviesDetail.map((buyRentDTo) =>
+      this.builderDetail(buyRentDTo, typeOperation),
+    );
+
+    const details = await Promise.all(detailsPromise);
+    const total = details.reduce((acc, curr) => acc + curr?.price, 0);
+
+    const updatedMovies = details.map((detail) => {
+      detail.movie.stock = detail.movie.stock - detail.quantity;
+      return detail.movie;
+    });
+
+    await this.moviesService.updateManyByEntity(updatedMovies);
+    return {
+      details,
+      subTotal: total,
     };
   }
 
-  async getMovieRentedByClientId(userId: number) {
-    const movieRented = await this.rentBuyRepository.findOne({
-      where: {
-        user: userId,
-        state: this.stateMovies.RENT,
-      },
-      relations: ['movie'],
-    });
-
-    return movieRented;
-  }
-
-  async rentOrBuyBuilder(
+  async buyRentMovies(
     clientId: number,
-    rentMovieDTO: CreateRentBuy,
-    typeOperation: string,
-    buyRentedMovie = false,
+    purchaseDetails: BuyMovieDTO[] = [],
+    rentMoviesDetails: RentMovieDTO[] = [],
   ) {
-    const [user, movie] = await Promise.all([
+    const boughtMovieDetails = plainToClass(RentMovieDTO, purchaseDetails);
+
+    if (purchaseDetails?.length && rentMoviesDetails?.length)
+      throw new BadRequestException(
+        'Currently you cannot buy and rent at the same time',
+      );
+
+    if (!purchaseDetails.length && !rentMoviesDetails.length)
+      throw new BadRequestException('Must add movies to do the operation');
+
+    const [user, detailsPurchase, detailsRent] = await Promise.all([
       this.userService.findOneById(clientId),
-      this.moviesService.findOneById(rentMovieDTO.movieId),
+      this.invoiceDetailsBuilder(boughtMovieDetails, BUY_OPERATION),
+      this.invoiceDetailsBuilder(rentMoviesDetails, RENT_OPERATION),
     ]);
 
-    if (movie.stock === 0 && !buyRentedMovie)
-      throw new ConflictException('There are not enough stock for this movie');
+    const { details: boughtDetails, subTotal: bougthSubotal } = detailsPurchase;
+    const { details: rentDetails, subTotal: rentSubtotal } = detailsRent;
 
-    rentMovieDTO.daysRent = rentMovieDTO.daysRent ? rentMovieDTO.daysRent : 3;
-    const operationTypes = this.getBuyRentData(
-      movie.salePrice,
-      rentMovieDTO.daysRent,
-      typeOperation,
-    );
+    const transactionDate = moment().format();
+    const details = boughtDetails.concat(...rentDetails);
+    const total = bougthSubotal + rentSubtotal;
 
-    return this.rentBuyRepository.create({
-      movie,
+    const invoiceData = this.invoiceRepository.create({
+      details,
+      total,
+      transactionDate,
       user,
-      transactionDate: moment().format(),
-      ...operationTypes,
-    });
-  }
-
-  async rentBuyTransaction(
-    clientId: number,
-    rentMovieDTO: CreateRentBuy,
-    typeOperation: string,
-  ) {
-    const [detail, userRentedMovie] = await Promise.all([
-      this.rentOrBuyBuilder(clientId, rentMovieDTO, typeOperation),
-      this.getMovieRentedByClientId(clientId),
-    ]);
-
-    if (typeOperation !== BUY_OPERATION && userRentedMovie)
-      throw new ConflictException('Client has a movie in possesion already');
-
-    await this.moviesService.updateByEntity(detail.movie, {
-      stock: detail.movie.stock - 1,
     });
 
-    const invoiceSaved = await this.rentBuyRepository.save(detail);
-    this.sendFacture(detail?.user, invoiceSaved, typeOperation);
-    return invoiceSaved;
-  }
+    const invoice = await this.invoiceRepository.save(invoiceData);
 
-  async returnRentedMovie(clientId: number) {
-    const movieRented = await this.getMovieRentedByClientId(clientId);
-
-    if (!movieRented || !movieRented?.movie)
-      throw new ConflictException(`Client doesn't have a movie rented`);
-
-    movieRented.state = this.stateMovies.RETURNED;
-
-    //only returns the movie to the stock if the client returns it
-    await this.moviesService.updateByEntity(movieRented.movie, {
-      stock: movieRented.movie.stock + 1,
-    });
-
-    const detail = await this.rentBuyRepository.save(movieRented);
-
-    return detail;
-  }
-
-  async buyRentedMovie(clientId: number) {
-    const movieRented = await this.getMovieRentedByClientId(clientId);
-
-    if (!movieRented || !movieRented?.movie)
-      throw new ConflictException(`Client doesn't have a movie rented`);
-
-    movieRented.state = this.stateMovies.BUY;
-
-    const detail = await this.rentOrBuyBuilder(
-      clientId,
-      {
-        movieId: movieRented.movie.id,
+    this.mailService.sendMail({
+      to: user?.email,
+      from: 'noreply@movierental.com',
+      subject: 'Thanks for prefer us! Transaction completed',
+      template: 'purchase',
+      context: {
+        user,
+        invoice,
+        boughtDetails,
+        rentDetails,
+        buySubTotal: invoice.total,
       },
-      BUY_OPERATION,
-      true,
-    );
+    });
 
-    await this.rentBuyRepository.save(movieRented);
-
-    const invoiceSaved = await this.rentBuyRepository.save(detail);
-    this.sendFacture(detail?.user, invoiceSaved, BUY_OPERATION);
-    return detail;
+    return invoice;
   }
 
   async addLikeToMovie(clientId: number, movieId: number) {
@@ -170,29 +170,55 @@ export class RentBuyService {
     return true;
   }
 
-  async sendFacture(
-    user: UserEntity,
-    detail: RentBuyEntity,
-    typeOperation: string,
-  ) {
-    const subject = 'Thanks for prefer us! Transaction completed';
-    const description =
-      (typeOperation === BUY_OPERATION
-        ? 'Purchase of the movie : '
-        : 'Rent of the movie : ') + detail?.movie?.title;
+  async returnMovies(clientId: number, invoiceId: number) {
+    const rentedDetails = await this.invoiceRepository
+      .createQueryBuilder('invoices')
+      .select()
+      .leftJoinAndSelect('invoices.details', 'details')
+      .where('invoices.id = :invoiceId', { invoiceId })
+      .andWhere('invoices.userId = :userId', { userId: clientId })
+      .andWhere('details.stateId = :stateId', {
+        stateId: this.stateMovies.RENT.id,
+      })
+      .getOne();
 
-    await this.mailService.sendMail({
-      to: user?.email,
-      from: 'noreply@movierental.com',
-      subject,
-      template: 'purchase',
-      context: {
-        user,
-        detail,
-        description,
-      },
+    if (!rentedDetails)
+      throw new ConflictException(
+        `It seems that the invoice with Id ${invoiceId} could no reached by you, probabbly doesn't exist`,
+      );
+
+    rentedDetails.details = rentedDetails.details.map((detail) => {
+      detail.state = this.stateMovies.RETURNED;
+      return detail;
     });
 
-    return true;
+    await this.invoiceRepository.save(rentedDetails);
+  }
+
+  async getMyInvoices(clientId: number) {
+    const invoices = await this.invoiceRepository.find({
+      where: { user: clientId },
+    });
+
+    return invoices;
+  }
+
+  async getInvoiceDetail(clientId: number, invoiceId: number) {
+    const invoice = await this.invoiceRepository
+      .createQueryBuilder('invoices')
+      .select()
+      .leftJoinAndSelect('invoices.details', 'details')
+      .leftJoinAndSelect('details.state', 'state')
+      .leftJoinAndSelect('invoices.user', 'user')
+      .where('invoices.id = :invoiceId', { invoiceId })
+      .andWhere('user.id = :clientId', { clientId })
+      .getOne();
+
+    if (!invoice)
+      throw new BadRequestException(
+        `It seems the invoice ${invoiceId} doesn't exist or doesn't belong to you`,
+      );
+
+    return invoice;
   }
 }

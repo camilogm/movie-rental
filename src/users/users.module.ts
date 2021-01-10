@@ -5,9 +5,9 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserEntity } from './entities/user.entity';
 import { RolesDBProvider } from './providers/roles.provider';
 import { TokenPasswordEntity } from './entities/token-password.entity';
-import { MailerModule } from '@nestjs-modules/mailer';
 import { UpdatePasswordService } from './providers/update-password.service';
 import { DeleteTokenRecoveyTask } from './delete-token-recovery.task';
+import { MailerModule } from '../mailer/mailer.module';
 
 @Module({
   controllers: [AccountsController],
