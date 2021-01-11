@@ -1,22 +1,26 @@
 version: '3.8'
 services:
+  db:
+    image: postgres:10
+    ports:
+      - '5432:5432'
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: test
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data
   api:
     build:
       dockerfile: Dockerfile
       context: .
     depends_on:
-      - postgres
+      - db
+    links:
+      - db
     env_file:
       - env.list
     ports:
       - '3000:3000'
     volumes:
       - .:/app
-  postgres:
-    image: postgres:10
-    ports:
-      - '35000:5432'
-    environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: db

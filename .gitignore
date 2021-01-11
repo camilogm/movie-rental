@@ -9,6 +9,7 @@ ormconfig.test.json
 /**/*.env
 ormconfig.json
 env.list
+pgdata
 
 # Logs
 logs
