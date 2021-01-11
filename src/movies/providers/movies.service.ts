@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { classToPlain } from 'class-transformer';
 import { ILike, Repository } from 'typeorm';
 import { CreateMovieDto } from '../dto/movies-dto/create-movie.dto';
 import { FilterMovieDto } from '../dto/movies-dto/filter-movie.dto';
@@ -48,10 +49,17 @@ export class MoviesService {
       .where({ title: ILike(`%${title}%`) })
       .andWhere('movies.availability = :availability', { availability });
 
-    if (tags?.length)
-      moviesQuery.andWhere('tags.name ILIKE ALL(ARRAY[:...tags])', {
-        tags: tags.map((tag) => `%${tag}%`),
+    if (tags?.length) {
+      tags.forEach((name, index) => {
+        const parameters = {
+          ['name_' + index]: '%' + name + '%',
+        };
+        moviesQuery.orWhere(`tags.name LIKE :name_${index}`, parameters);
       });
+      return classToPlain(await moviesQuery.getMany()).filter(
+        (movie) => movie.tags?.length,
+      );
+    }
 
     return await moviesQuery.getMany();
   }

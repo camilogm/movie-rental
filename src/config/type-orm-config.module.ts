@@ -13,6 +13,8 @@ export const TypeORMConfigModule = TypeOrmModule.forRootAsync({
       ...configService.get(ENV.DB_CONFIGURATION),
       synchronize: false,
       entities: ['dist/**/*.entity{.ts,.js}'],
+      logger: 'file',
+      logging: true,
     };
   },
 });
