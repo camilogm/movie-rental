@@ -17,7 +17,7 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { MailerCustomService } from '../../mailer/mailer.service';
+import { MailerCustomService } from '../../mailer/mailer-custom.service';
 
 const email = 'mock@mock.com';
 const userMock = new UserEntity();

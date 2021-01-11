@@ -12,7 +12,7 @@ import { v4 as uuid } from 'uuid';
 import { ResetPasswordDTO } from '../dto/user-dtos/reset-password.dto';
 import * as bcrypt from 'bcrypt';
 import { MINUTES_EXPIRES_TOKEN_RECOVERY_PASSWORD } from '../../constants';
-import { MailerCustomService } from '../../mailer/mailer.service';
+import { MailerCustomService } from '../../mailer/mailer-custom.service';
 
 @Injectable()
 export class UpdatePasswordService {
@@ -55,7 +55,6 @@ export class UpdatePasswordService {
 
     const [user] = await Promise.all([promiseUser, deleteCurrentToken]);
 
-    console.log(user);
     const newPasswordToken = await this.tokenPasswordRepository.save({
       createAt: moment().format(),
       token: uuid(),

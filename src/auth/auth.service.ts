@@ -1,9 +1,4 @@
-import {
-  Injectable,
-  InternalServerErrorException,
-  NotFoundException,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { AccountsService } from '../users/providers/accounts.service';
@@ -33,11 +28,8 @@ export class AuthService {
 
       if (matchUser) return user;
     } catch (error) {
-      if (!(error instanceof NotFoundException))
-        throw new InternalServerErrorException('Try later');
+      throw new UnauthorizedException('Your credentials are wrong');
     }
-
-    throw new UnauthorizedException('Your credentials are wrong');
   }
 
   async login(loginDTO: LoginDTO) {

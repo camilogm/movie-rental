@@ -1,7 +1,4 @@
-import {
-  InternalServerErrorException,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
@@ -82,20 +79,6 @@ describe('Auth Service', () => {
           await authService.validateUser(loginDTO);
         } catch (error) {
           expect(error).toBeInstanceOf(UnauthorizedException);
-        }
-      });
-
-      it('internal error', async () => {
-        const loginDTO: LoginDTO = { username: 'gm', password: inputPassword };
-
-        try {
-          (
-            await accountsService.findOneByUserName(loginDTO.username)
-          ).password = undefined;
-
-          await authService.validateUser(loginDTO);
-        } catch (error) {
-          expect(error).toBeInstanceOf(InternalServerErrorException);
         }
       });
     });

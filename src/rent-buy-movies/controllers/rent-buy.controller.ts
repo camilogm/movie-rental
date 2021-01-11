@@ -16,6 +16,7 @@ import {
   ROLE_CLIENT,
 } from '../../common/decorators/authorization.decorator';
 import { BuyManyMoviesDTO } from '../dto/buy-dto/buy-many-movies.dto';
+import { TransactionClientDTO } from '../dto/rent-buy.dto';
 import { RentManyMoviesDTO } from '../dto/rent.dto/rent-many.movie.dto';
 import { RentBuyService } from '../providers/rent-buy.service';
 
@@ -28,19 +29,30 @@ export class RentBuyController {
 
   @Post('/buy')
   @HttpCode(HttpStatus.OK)
-  transaction(@Req() request, @Body() buyMovies: BuyManyMoviesDTO) {
+  buyMovies(@Req() request, @Body() buyMovies: BuyManyMoviesDTO) {
     const user: PayloadDTO = request.user;
     return this.rentBuyService.buyRentMovies(user.sub, buyMovies.buyMovies);
   }
 
   @Post('/rent')
   @HttpCode(HttpStatus.OK)
-  reafd(@Req() request, @Body() rentMovies: RentManyMoviesDTO) {
+  rentMovies(@Req() request, @Body() rentMovies: RentManyMoviesDTO) {
     const user: PayloadDTO = request.user;
     return this.rentBuyService.buyRentMovies(
       user.sub,
       undefined,
       rentMovies.rentMovies,
+    );
+  }
+
+  @Post('/rentbuy')
+  @HttpCode(HttpStatus.OK)
+  rentBuyMovies(@Req() request, @Body() obj: TransactionClientDTO) {
+    const user: PayloadDTO = request.user;
+    return this.rentBuyService.buyRentMovies(
+      user.sub,
+      obj.buyMovies,
+      obj.rentMovies,
     );
   }
 

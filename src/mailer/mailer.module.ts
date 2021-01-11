@@ -3,17 +3,17 @@ import { PugAdapter } from '@nestjs-modules/mailer/dist/adapters/pug.adapter';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { join } from 'path';
-import { ENV_CONSTS } from '../constants';
-import { MailerCustomService } from './mailer.service';
+import { ENV } from '../constants';
+import { MailerCustomService } from './mailer-custom.service';
 
 const MailerModuleConfig = MailerNestModule.forRootAsync({
   imports: [ConfigModule],
   inject: [ConfigService],
   useFactory: async (configService: ConfigService) => {
     const templatePath = join(__dirname, '..', '..', '..', 'templates');
-    console.log(templatePath);
+
     return {
-      transport: configService.get<string>(ENV_CONSTS.EMAIL_TRANSPORT),
+      transport: configService.get<string>(ENV.EMAIL_TRANSPORT),
       defaults: {
         from: '"nest-modules" <modules@nestjs.com>',
       },

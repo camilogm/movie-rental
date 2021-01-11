@@ -8,6 +8,7 @@ ormconfig.development.json
 ormconfig.test.json
 /**/*.env
 ormconfig.json
+env.list
 
 # Logs
 logs

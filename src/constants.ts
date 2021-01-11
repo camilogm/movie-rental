@@ -3,6 +3,8 @@ export const STATES_MOVIES_PROVIDER = 'STATES_MOVIES_PROVIDER';
 
 export const JWT_SECRET = 'JWT_SECRET';
 export const EMAIL_TRANSPORT = 'EMAIL_TRANSPORT';
+export const DB_CONFIGURATION = 'DB_CONFIGURATION';
+export const ENVIROMENT = 'ENVIROMENT';
 export const MINUTES_EXPIRES_TOKEN_JWT = 9000;
 export const MINUTES_EXPIRES_TOKEN_RECOVERY_PASSWORD = 10;
 
@@ -10,7 +12,9 @@ export const BUY_OPERATION = 'buy';
 export const RENT_OPERATION = 'rent';
 export const RETURN_OPERATION = 'returned';
 
-export const ENV_CONSTS = {
+export const ENV = {
   JWT_SECRET,
   EMAIL_TRANSPORT,
+  DB_CONFIGURATION,
+  ENVIROMENT,
 };

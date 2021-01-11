@@ -4,6 +4,7 @@ import { AccountsService } from '../../users/providers/accounts.service';
 import { RentBuyService } from '../providers/rent-buy.service';
 import {
   createMockRepository,
+  mockQueryBuilder,
   MockRepository,
 } from '../../../test/TypeORM.mock';
 import { InvoiceDetailEntity } from '../entities/invoice-detail.entity';
@@ -13,12 +14,14 @@ import {
   RENT_OPERATION,
   STATES_MOVIES_PROVIDER,
 } from '../../constants';
-import * as moment from 'moment';
-import { UserEntity } from '../../users/entities/user.entity';
 import { MovieEntity } from '../../movies/entities/movie.entity';
-import { ConflictException, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InvoiceEntity } from '../entities/invoice.entity';
-import { MailerCustomService } from '../../mailer/mailer.service';
+import { MailerCustomService } from '../../mailer/mailer-custom.service';
 import {
   expectedDataBuy,
   mockStates,
@@ -34,10 +37,14 @@ import {
   mockDetailsEntityBuy,
   mockMoviesArrayBuy,
   expectedDetailsBuy,
+  substracStock,
+  mockUser,
+  expectedInvoice,
 } from './rent-buy.define';
 
 const clientId = 1;
 const movieId = 1;
+const invoiceId = 1;
 
 describe('rentbuy service', () => {
   let rentBuyService: RentBuyService;
@@ -55,12 +62,12 @@ describe('rentbuy service', () => {
         },
         {
           provide: AccountsService,
-          useValue: { findOneById: () => UserEntity },
+          useValue: { findOneById: () => mockUser() },
         },
         {
           provide: MoviesService,
           useValue: {
-            findOneById: () => mockMovie,
+            findOneById: () => mockMovie(),
             updateByEntity: jest.fn(),
             updateManyByEntity: jest.fn(),
           },
@@ -79,7 +86,7 @@ describe('rentbuy service', () => {
         },
         {
           provide: STATES_MOVIES_PROVIDER,
-          useValue: mockStates,
+          useValue: mockStates(),
         },
       ],
     }).compile();
@@ -106,23 +113,23 @@ describe('rentbuy service', () => {
   describe('builderDetail', () => {
     describe('success', () => {
       it('get buy detail', async () => {
-        invoiceDetailsRepository.create.mockReturnValue(mockBuyDetail);
+        invoiceDetailsRepository.create.mockReturnValue(mockBuyDetail());
         const data = await rentBuyService.builderDetail(
-          { daysRent: 0, ...mockBuyMovieDTO },
+          { daysRent: 0, ...mockBuyMovieDTO() },
           BUY_OPERATION,
         );
 
-        expect(data).toEqual(expectedDataBuy);
+        expect(data).toEqual(expectedDataBuy());
       });
 
       it('get rent detail', async () => {
-        invoiceDetailsRepository.create.mockReturnValue(mockRentDetail);
+        invoiceDetailsRepository.create.mockReturnValue(mockRentDetail());
         const data = await rentBuyService.builderDetail(
-          mockRentMovieDTO,
+          mockRentMovieDTO(),
           RENT_OPERATION,
         );
 
-        expect(data).toEqual(expectedDataRent);
+        expect(data).toEqual(expectedDataRent());
       });
     });
 
@@ -131,8 +138,8 @@ describe('rentbuy service', () => {
         try {
           await rentBuyService.builderDetail(
             {
-              ...mockBuyMovieDTO,
-              quantity: mockMovie.stock + 1,
+              ...mockBuyMovieDTO(),
+              quantity: mockMovie().stock + 1,
               daysRent: 0,
             },
             BUY_OPERATION,
@@ -147,45 +154,126 @@ describe('rentbuy service', () => {
   describe('Get InvoiceDetails', () => {
     describe('success', () => {
       it('Buy details', async () => {
-        mockDetailsEntityBuy.forEach((detail) =>
+        mockDetailsEntityBuy().forEach((detail) =>
           invoiceDetailsRepository.create.mockReturnValue(detail),
         );
 
+        const setterRequest = mockMoviesArrayBuy();
         const data = await rentBuyService.invoiceDetailsBuilder(
-          mockMoviesArrayBuy,
+          setterRequest,
           RENT_OPERATION,
         );
 
+        const setterValue = expectedDetailsBuy();
+        const expectedValues = substracStock(setterValue, setterRequest);
+
         const expectedDetailsBuilder = {
-          details: expectedDetailsBuy,
-          subTotal: expectedDetailsBuy.reduce(
-            (acc, curr) => acc + curr.price,
-            0,
-          ),
+          details: expectedValues,
+          subTotal: expectedValues.reduce((acc, curr) => acc + curr.price, 0),
         };
 
         expect(data).toEqual(expectedDetailsBuilder);
       });
 
       it('rent details', async () => {
-        mockDetailsEntityRent.forEach((detail) =>
+        mockDetailsEntityRent().forEach((detail) =>
           invoiceDetailsRepository.create.mockReturnValue(detail),
         );
+        const setterRequest = mockMoviesArrayBuy();
 
         const data = await rentBuyService.invoiceDetailsBuilder(
-          mockMoviesArrayRent,
+          setterRequest,
           RENT_OPERATION,
         );
 
+        const setterValues = expectedDetailsRent();
+        const expectedValues = substracStock(setterValues, setterRequest);
+
         const expectedDetailsBuilder = {
-          details: expectedDetailsRent,
-          subTotal: expectedDetailsRent.reduce(
-            (acc, curr) => acc + curr.price,
-            0,
-          ),
+          details: expectedValues,
+          subTotal: expectedValues.reduce((acc, curr) => acc + curr.price, 0),
         };
 
         expect(data).toEqual(expectedDetailsBuilder);
+      });
+    });
+
+    describe('otherwise', () => {
+      it('not enoguh stock in rent/buy', async () => {
+        try {
+          const mockMoviesRent = mockMoviesArrayRent();
+          mockMoviesRent[0].quantity = mockMovie().stock + 1;
+
+          await rentBuyService.invoiceDetailsBuilder(
+            mockMoviesRent,
+            RENT_OPERATION,
+          );
+        } catch (error) {
+          expect(error).toBeInstanceOf(ConflictException);
+        }
+      });
+    });
+  });
+
+  describe('rent/buy', () => {
+    describe('success', () => {
+      it('buy', async () => {
+        mockDetailsEntityBuy().forEach((detail) =>
+          invoiceDetailsRepository.create.mockReturnValue(detail),
+        );
+        const expectedData = expectedInvoice();
+
+        invoicerRepository.create.mockReturnValue(expectedData);
+        invoicerRepository.save.mockReturnValue(expectedData);
+
+        const data = await rentBuyService.buyRentMovies(
+          clientId,
+          mockMoviesArrayBuy(),
+          undefined,
+        );
+
+        expect(data).toEqual(expectedData);
+      });
+
+      it('rent', async () => {
+        mockDetailsEntityRent().forEach((detail) =>
+          invoiceDetailsRepository.create.mockReturnValue(detail),
+        );
+
+        const expectedData = expectedInvoice();
+
+        invoicerRepository.create.mockReturnValue(expectedData);
+        invoicerRepository.save.mockReturnValue(expectedData);
+
+        const data = await rentBuyService.buyRentMovies(
+          clientId,
+          undefined,
+          mockMoviesArrayRent(),
+        );
+
+        expect(data).toEqual(expectedData);
+      });
+    });
+
+    describe('otherwise', () => {
+      it('Duplicating moviesId in buy and rent', async () => {
+        try {
+          await rentBuyService.buyRentMovies(
+            clientId,
+            mockMoviesArrayBuy(),
+            mockMoviesArrayRent(),
+          );
+        } catch (error) {
+          expect(error).toBeInstanceOf(ConflictException);
+        }
+      });
+
+      it('Empty buy and ret', async () => {
+        try {
+          await rentBuyService.buyRentMovies(clientId, undefined, undefined);
+        } catch (error) {
+          expect(error).toBeInstanceOf(BadRequestException);
+        }
       });
     });
   });
@@ -235,6 +323,87 @@ describe('rentbuy service', () => {
       } catch (error) {
         expect(error).toBeInstanceOf(TypeError);
       }
+    });
+  });
+
+  describe('return movies', () => {
+    describe('success', () => {
+      it('returned', async () => {
+        invoicerRepository.createQueryBuilder = jest.fn(() => ({
+          ...mockQueryBuilder(),
+          getOne: () => ({
+            details: [],
+          }),
+        }));
+
+        const data = await rentBuyService.returnMovies(clientId, invoiceId);
+        expect(data).toBeTruthy();
+      });
+    });
+
+    describe('failed', () => {
+      it('conflict', async () => {
+        invoicerRepository.createQueryBuilder = jest.fn(() => ({
+          ...mockQueryBuilder(),
+          getOne: () => undefined,
+        }));
+        try {
+          await rentBuyService.returnMovies(clientId, invoiceId);
+        } catch (error) {
+          expect(error).toBeInstanceOf(ConflictException);
+        }
+      });
+    });
+  });
+
+  describe('Get client invoices', () => {
+    const expectedData = [];
+
+    describe('success', () => {
+      it('founded', async () => {
+        invoicerRepository.find.mockReturnValue(expectedData);
+        const data = await rentBuyService.getMyInvoices(clientId);
+        expect(data).toEqual(expectedData);
+      });
+    });
+
+    describe('failed', () => {
+      it('typeerror', async () => {
+        invoicerRepository.find.mockReturnValue(expectedData);
+        try {
+          await rentBuyService.getMyInvoices(clientId);
+        } catch (error) {
+          expect(error).toBeInstanceOf(TypeError);
+        }
+      });
+    });
+  });
+
+  describe('Get invoice detail', () => {
+    const invoiceId = 1;
+    const expectedData = {};
+
+    describe('success', () => {
+      it('get', async () => {
+        invoicerRepository.findOne.mockReturnValue(expectedData);
+        const data = await rentBuyService.getInvoiceDetail(clientId, invoiceId);
+        expect(data).toEqual(expectedData);
+      });
+    });
+
+    describe('failed', () => {
+      it('badRequest', async () => {
+        invoicerRepository.createQueryBuilder = jest.fn(() => ({
+          ...mockQueryBuilder(),
+          getOne: () => undefined,
+        }));
+
+        try {
+          await rentBuyService.getInvoiceDetail(clientId, invoiceId);
+        } catch (error) {
+          expect(error).toBeInstanceOf(BadRequestException);
+        }
+      });
     });
   });
 });

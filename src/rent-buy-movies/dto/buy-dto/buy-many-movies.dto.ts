@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { ArrayMaxSize, IsOptional, ValidateNested } from 'class-validator';
 import { NonDuplicateValues } from '../../../common/decorators/no-duplicate-values.decorator';
-import { BuyMovieDTO } from './buy-a-movie.dto';
+import { BuyMovieDTO } from './buy-movie.dto';
 
 export class BuyManyMoviesDTO {
   @ValidateNested({ each: true })

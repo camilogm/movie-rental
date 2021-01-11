@@ -18,9 +18,9 @@ import {
 } from '../../constants';
 import { StateMoviesDTO } from '../dto/state-movies.dto';
 import { InvoiceEntity } from '../entities/invoice.entity';
-import { BuyMovieDTO } from '../dto/buy-dto/buy-a-movie.dto';
+import { BuyMovieDTO } from '../dto/buy-dto/buy-movie.dto';
 import { plainToClass } from 'class-transformer';
-import { MailerCustomService } from '../../mailer/mailer.service';
+import { MailerCustomService } from '../../mailer/mailer-custom.service';
 
 @Injectable()
 export class RentBuyService {
@@ -39,7 +39,8 @@ export class RentBuyService {
   async builderDetail(rentMovieDTO: RentMovieDTO, typeOperation: string) {
     const movie = await this.moviesService.findOneById(rentMovieDTO.movieId);
 
-    const enoughStock = movie.stock >= rentMovieDTO.quantity;
+    const enoughStock =
+      movie.stock >= rentMovieDTO.quantity && movie.availability;
     const isBuyOperation = typeOperation === BUY_OPERATION;
 
     if (!enoughStock)
@@ -103,12 +104,16 @@ export class RentBuyService {
   ) {
     const boughtMovieDetails = plainToClass(RentMovieDTO, purchaseDetails);
 
-    if (purchaseDetails?.length && rentMoviesDetails?.length)
-      throw new BadRequestException(
-        'Currently you cannot buy and rent at the same time',
+    if (purchaseDetails?.length && rentMoviesDetails?.length) {
+      const conflictIds = purchaseDetails.some((buyDTO) =>
+        rentMoviesDetails.some((rentDTO) => rentDTO.movieId === buyDTO.movieId),
       );
-
-    if (!purchaseDetails.length && !rentMoviesDetails.length)
+      if (conflictIds)
+        throw new ConflictException(
+          'Currently you cannot buy and rent the same movie at the same time',
+        );
+    }
+    if (!purchaseDetails?.length && !rentMoviesDetails?.length)
       throw new BadRequestException('Must add movies to do the operation');
 
     const [user, detailsPurchase, detailsRent] = await Promise.all([
@@ -175,6 +180,7 @@ export class RentBuyService {
       .createQueryBuilder('invoices')
       .select()
       .leftJoinAndSelect('invoices.details', 'details')
+      .leftJoinAndSelect('details.movie', 'movie')
       .where('invoices.id = :invoiceId', { invoiceId })
       .andWhere('invoices.userId = :userId', { userId: clientId })
       .andWhere('details.stateId = :stateId', {
@@ -192,7 +198,17 @@ export class RentBuyService {
       return detail;
     });
 
+    const { details } = rentedDetails;
+    const addStockToMovies = details?.map((detail) => {
+      const { movie } = detail;
+      movie.availability = true;
+      movie.stock = detail.quantity + movie.stock;
+      return movie;
+    });
+
+    await this.moviesService.updateManyByEntity(addStockToMovies);
     await this.invoiceRepository.save(rentedDetails);
+    return true;
   }
 
   async getMyInvoices(clientId: number) {

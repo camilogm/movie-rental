@@ -1,5 +1,5 @@
 import { IsInt, IsNumber, IsOptional, Max, Min } from 'class-validator';
-import { BuyMovieDTO } from '../buy-dto/buy-a-movie.dto';
+import { BuyMovieDTO } from '../buy-dto/buy-movie.dto';
 
 export class RentMovieDTO extends BuyMovieDTO {
   @IsNumber()

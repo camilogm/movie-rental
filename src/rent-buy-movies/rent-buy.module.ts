@@ -8,7 +8,7 @@ import { InvoicesController } from './controllers/invoices.controller';
 import { MoviesStatesProviders } from './providers/movies-state.provider';
 import { RentBuyService } from './providers/rent-buy.service';
 import { RentBuyController } from './controllers/rent-buy.controller';
-import { MailerCustomService } from '../mailer/mailer.service';
+import { MailerCustomService } from '../mailer/mailer-custom.service';
 import { MailerModule } from '../mailer/mailer.module';
 
 @Module({

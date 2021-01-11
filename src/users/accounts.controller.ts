@@ -62,13 +62,13 @@ export class AccountsController {
   @Delete('/me')
   @OwnProfileChanges()
   @HttpCode(HttpStatus.NO_CONTENT)
-  remove(@Req() request) {
+  removeMe(@Req() request) {
     const user: PayloadDTO = request.user;
     return this.accountsService.remove(user.sub);
   }
 
   @Patch('/:idUser/role/:idRole')
-  @OverrideAllowedRoles(ROLE_SUPER_ADMIN)
+  @OverrideAllowedRoles(ROLE_SUPER_ADMIN, ROLE_ADMIN)
   changeRole(@Param('idUser') idUser: string, @Param('idRole') idRole: string) {
     return this.accountsService.updateRole(+idUser, +idRole);
   }

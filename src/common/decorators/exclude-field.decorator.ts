@@ -1,13 +1,13 @@
 import { registerDecorator, ValidationArguments } from 'class-validator';
 
-export function ExcludeField(property: string) {
+export function ExcludeField() {
   // eslint-disable-next-line @typescript-eslint/ban-types
   return function (object: Object, propertyName: string) {
     registerDecorator({
       name: 'ExcludeField',
       target: object.constructor,
       propertyName,
-      constraints: [property],
+      constraints: [propertyName],
       validator: {
         validate() {
           return false;

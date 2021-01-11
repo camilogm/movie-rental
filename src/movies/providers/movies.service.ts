@@ -28,20 +28,32 @@ export class MoviesService {
   async findFilterMovies(filterMovieDTO: FilterMovieDto) {
     const { sort, title, availability, tags } = filterMovieDTO;
 
-    const movies = this.moviesRepository
+    const moviesQuery = this.moviesRepository
       .createQueryBuilder('movies')
-      .leftJoinAndSelect('movies.likes', 'likes')
       .leftJoinAndSelect('movies.tags', 'tags')
-      .orderBy(sort.value, sort.order)
+      .leftJoinAndSelect('movies.likes', 'likes');
+
+    if (sort.value === 'likes') {
+      moviesQuery
+        .addSelect((subQuery) => {
+          return subQuery
+            .select('COUNT(likes.moviesId)', 'count')
+            .from('movies_likes_users', 'likes')
+            .where('likes.moviesId = movies.id');
+        }, 'count')
+        .orderBy({ count: sort.order });
+    } else moviesQuery.orderBy(sort.value, sort.order);
+
+    moviesQuery
       .where({ title: ILike(`%${title}%`) })
       .andWhere('movies.availability = :availability', { availability });
 
     if (tags?.length)
-      movies.andWhere('tags.name ILIKE ALL(ARRAY[:...tags])', {
+      moviesQuery.andWhere('tags.name ILIKE ALL(ARRAY[:...tags])', {
         tags: tags.map((tag) => `%${tag}%`),
       });
 
-    return await movies.getMany();
+    return await moviesQuery.getMany();
   }
 
   async findOneById(id: number, addTags = false, addLikes = false) {

@@ -7,7 +7,7 @@ export class UpdateUserDto extends PartialType(CreateUserDto) {
    * This exclude is only for the client
    * You can use the field if you want do manually set of parameter
    */
-  @ExcludeField('password')
+  @ExcludeField()
   @ApiHideProperty()
   password?: string;
 }

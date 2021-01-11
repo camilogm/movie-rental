@@ -109,13 +109,29 @@ describe('MoviesService', () => {
 
   describe('find many movies', () => {
     describe('success find many', () => {
-      it('should be an array', async () => {
-        const expectedMovies = [];
+      it('case sort title', async () => {
+        const expectedData = [];
 
-        const movies = await moviesService.findFilterMovies(
-          new FilterMovieDto(),
-        );
-        expect(movies).toEqual(expectedMovies);
+        const data = await moviesService.findFilterMovies(new FilterMovieDto());
+        expect(data).toEqual(expectedData);
+      });
+
+      it('case sort likes', async () => {
+        const expectedData = [];
+        const filter = new FilterMovieDto();
+        filter.sort = { value: 'likes', order: 'ASC' };
+
+        const data = await moviesService.findFilterMovies(filter);
+        expect(data).toEqual(expectedData);
+      });
+
+      it('case tags', async () => {
+        const expectedData = [];
+        const filter = new FilterMovieDto();
+        filter.tags = ['comedy'];
+
+        const data = await moviesService.findFilterMovies(filter);
+        expect(data).toEqual(expectedData);
       });
     });
 
