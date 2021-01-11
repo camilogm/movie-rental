@@ -3,11 +3,12 @@ services:
   db:
     image: postgres:10
     ports:
-      - '5432:5432'
+      - 5433:5432
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
       POSTGRES_DB: test
+    restart: always
     volumes:
       - ./pgdata:/var/lib/postgresql/data
   api:
@@ -16,11 +17,10 @@ services:
       context: .
     depends_on:
       - db
-    links:
-      - db
     env_file:
       - env.list
     ports:
       - '3000:3000'
     volumes:
       - .:/app
+    restart: always

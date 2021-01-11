@@ -21,7 +21,8 @@
       ".suscriber.ts",
       ".provider.ts",
       ".constants.ts",
-      ".define.ts"
+      ".define.ts",
+      "config.ts"
     ],
     "moduleFileExtensions": [
       "js",

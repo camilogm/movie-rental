@@ -6,5 +6,4 @@ RUN npm config set registry http://registry.npmjs.org
 RUN npm install
 ADD . /app
 EXPOSE 3000
-EXPOSE 5432
 CMD ["npm", "run", "start"]

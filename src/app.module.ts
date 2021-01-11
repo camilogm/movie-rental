@@ -44,7 +44,4 @@ import { TypeORMConfigModule } from './config/type-orm-config.module';
     },
   ],
 })
-// @Module({
-//   imports: [ConfigEnvModule, MailerModule, TypeORMConfigModule],
-// })
 export class AppModule {}
