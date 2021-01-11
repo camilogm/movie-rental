@@ -10,7 +10,7 @@ const MailerModuleConfig = MailerNestModule.forRootAsync({
   imports: [ConfigModule],
   inject: [ConfigService],
   useFactory: async (configService: ConfigService) => {
-    const templatePath = join(__dirname, '..', '..', '..', 'templates');
+    const templatePath = join(__dirname, '..', '..', 'templates');
 
     return {
       transport: configService.get<string>(ENV.EMAIL_TRANSPORT),
