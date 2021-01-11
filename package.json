@@ -27,7 +27,7 @@
     "precommit-msg": "echo 'Pre-commit checks...' && exit 0"
 
   },
-  "pre-commit": [ "precommit-msg", "lint" , "test:services "],
+  "pre-commit": [ "precommit-msg", "lint" , "test:services"],
   "dependencies": {
     "@nestjs-modules/mailer": "^1.5.1",
     "@nestjs/common": "^7.6.5",
