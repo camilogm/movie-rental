@@ -1,14 +1,10 @@
 # Movie-rental api
 
-API para simular un movie-rental
+Simulation for movie purchasing and rental
 
 # Importante
 
-Es obligatorio correr la primera migración o tener el PG_DUMP para pruebas.
-Para poder probar puedes usar la siguiente colleción de POSTMAN
-https://www.getpostman.com/collections/16e5860b19095d9be1d8
-
-https://hidden-harbor-57525.herokuapp.com/
+If you want to test you can run the dump data for testing purposes.
 
 import CLI ejemplo: pg_restore -U postgres -d restored_database -1 <file.sql>
 
@@ -16,9 +12,9 @@ import CLI ejemplo: pg_restore -U postgres -d restored_database -1 <file.sql>
 
 | Funcionalidad     | commando                                                                    |
 | ----------------- | --------------------------------------------------------------------------- |
-| npm start         | Inicia el servidor con ts-node                                              |
-| npm run start:dev | Inicia el servidor en modo watch                                            |
-| npm run migration | Corre la primera migración si el ormconfig conecta satisfactoriamente la DB |
+| npm start         | Starts the server                                                           |
+| npm run start:dev | Starts the server in development mode                                       |
+| npm run migration | Runs the migrations for database with typeorm migrations|
 
 ### headers
 
